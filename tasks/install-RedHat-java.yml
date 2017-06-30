@@ -16,7 +16,7 @@
 
 - name: construct oracle rpm url
   set_fact:
-    oracle_java_rpm_url: "http://download.oracle.com/otn-pub/java/jdk/{{ oracle_java_version }}u{{ oracle_java_version_update }}-b{{ oracle_java_version_build }}/{{ oracle_java_rpm_filename }}"
+    oracle_java_rpm_url: "http://download.oracle.com/otn-pub/java/jdk/{{ oracle_java_version }}u{{ oracle_java_version_update }}-b{{ oracle_java_version_build }}/d54c1d3a095b4ff2b6607d096fa80163/{{ oracle_java_rpm_filename }}"
 
 - name: install curl and unzip
   yum:
