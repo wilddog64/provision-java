@@ -10,4 +10,5 @@
     var: ansible_os_family
 
 - include: "tasks/install-{{ ansible_os_family }}-java.yml"
+  when: require_oracle_java
 - include: "tasks/jce.yml"
