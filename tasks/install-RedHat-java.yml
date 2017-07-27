@@ -57,3 +57,12 @@
     - { path: "{{ oracle_java_home }}/jre/bin", bin: 'keytool' }
     - { path: "{{ oracle_java_home }}/bin", bin: 'javac' }
     - { path: "{{ oracle_java_home }}/bin", bin: 'java' }
+
+- name: create a persist JAVA_HOME environment variable
+  copy:
+    content: |
+      export JAVA_HOME={{ oracle_java_home }}
+    dest: /etc/profile.d/jdk.sh
+    owner: root
+    group: root
+    mode: "u=rwx,o=r,g=r"

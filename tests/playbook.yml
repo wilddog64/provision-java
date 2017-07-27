@@ -3,5 +3,6 @@
   become: yes
   vars:
     require_oracle_java: yes
+    oracle_java_version: 8
   roles:
     - provision-oracle-java

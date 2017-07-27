@@ -29,3 +29,19 @@
   with_items:
     - local_policy.jar
     - US_export_policy.jar
+
+- name: get JAVA_HOME environment variable
+  shell: |
+    source /etc/profile.d/jdk.sh
+    echo $JAVA_HOME
+  register: env
+
+- name: create symlinks to jce files
+  file:
+    src: "{{ jce_location }}/{{ item }}"
+    dest: "{{ ansible_env.JAVA_HOME }}/jre/lib/security/{{ item }}"
+    force: yes
+    state: link
+  with_items:
+    - local_policy.jar
+    - US_export_policy.jar
