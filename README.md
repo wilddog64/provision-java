@@ -1,38 +1,45 @@
-Role Name
-=========
+# provision-oracle-java
 
-A brief description of the role goes here.
+an Ansible role that will install oracle java and jce
 
-Requirements
-------------
+## Requirements
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+* Python 2.7 or greater
+* Ansible 2.0 or greater
 
-Role Variables
---------------
+## Role Variables
+These variables control how provision-oracle-java behavior
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+### platform indedepend variables
 
-Dependencies
-------------
+* oracle_java_version is a major oracle java version, i.e. 7, 8, ...
+* oracle_jce_url is where to download oracle jce package
+* oracle_jce_home is where oracle jce to be extracted to
+* require_oracle_java is a boolean flag to determine if java need to be installed. Default is yes.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+### platform specific variables
 
-Example Playbook
-----------------
+#### vars/RedHat.yml - for RedHat family OSes
+* oracle_java_version_update is what update you want to have
+* oracle_java_version_build is what build will it be
+
+## Dependencies
+
+
+## Example Playbook
 
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
-    - hosts: servers
+    ---
+    - hosts: all
+      become: yes
       roles:
-         - { role: username.rolename, x: 42 }
+    	- provision-oracle-java
 
-License
--------
+## Command Line Usage
+
+* ansible-playbook -vv -i tests/inventory -l test-jenkins -k tests/playbook.yml will apply playbook to a label test-jenkins defines in tests/inventory file. It will ask password for ssh session, and output level 2 verbosity to console
+
+## License
 
 BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
