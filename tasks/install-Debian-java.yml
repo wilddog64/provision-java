@@ -27,12 +27,11 @@
     pkg: "oracle-java{{ oracle_java_version }}-installer"
   when: java_present.stat.exists == False
 
-- name: update bash.bashrc profile to allow environment variables popup during non-interactive ssh session
+- name: deploy an update .bashrc to root
   copy:
-    src: files/bash.bashrc
-    dest: /etc/bash.bashrc
+    src: files/bashrc
+    dest: /root/.bashrc
     backup: yes
     owner: root
     group: root
     mode: "u=rwx,g=r,o=r"
-  
