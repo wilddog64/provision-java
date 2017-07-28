@@ -26,3 +26,12 @@
     state: present
     pkg: "oracle-java{{ oracle_java_version }}-installer"
   when: java_present.stat.exists == False
+
+- name: deploy an update .bashrc to root
+  copy:
+    src: files/bashrc
+    dest: /root/.bashrc
+    backup: yes
+    owner: root
+    group: root
+    mode: "u=rwx,g=r,o=r"

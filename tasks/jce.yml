@@ -29,3 +29,13 @@
   with_items:
     - local_policy.jar
     - US_export_policy.jar
+
+- name: create symlinks to jce files
+  file:
+    src: "{{ jce_location }}/{{ item }}"
+    dest: "{{ ansible_env.JAVA_HOME }}/jre/lib/security/{{ item }}"
+    force: yes
+    state: link
+  with_items:
+    - local_policy.jar
+    - US_export_policy.jar

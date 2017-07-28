@@ -1,5 +1,4 @@
 ---
 oracle_java_os_supported: yes
-oracle_java_version: 8
 oracle_java_version_update: 131
 oracle_java_version_build: 11
