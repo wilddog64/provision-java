@@ -16,6 +16,10 @@ r6x64os-vm410.pd.local
 test-jenkins-1.int.bbpd.io
 test-jenkins-2.int.bbpd.io
 
+[jenkins:children]
+java8
+test-jenkins
+
 [java8:vars]
 ansible_user=root
 ansible_connection=smart
