@@ -39,3 +39,16 @@
   with_items:
     - local_policy.jar
     - US_export_policy.jar
+
+- name: check if jce is enabled
+  shell: >
+    {{ ansible_env.JAVA_HOME }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
+  register: jce
+
+- name: set a jce fact
+  set_fact:
+    jce_enabled: "{{ jce.stdout }}"
+
+- assert:
+    that:
+      - "jce_enable == true"

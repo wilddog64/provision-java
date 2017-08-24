@@ -21,6 +21,9 @@ w8x64s12-vm081.pd.local
 w8x64s12-vm076.pd.local
 w8x64s12-vm005.pd.local
 
+[acceptance-test-mssql:vars]
+ansible_user=administrator
+
 [acceptance-test-oracle]
 r6x64os-vm371.pd.local
 r6x64os-vm372.pd.local
