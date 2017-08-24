@@ -56,10 +56,13 @@ r6x64os-vm395.pd.local
 r6x64os-vm396.pd.local
 r6x64os-vm424.pd.local
 
-[acceptance:children]
-acceptance-test-mssql
+[acceptance-test-linux:children]
 acceptance-test-oracle
 acceptance-test-postgresql
+
+[acceptance:children]
+acceptance-test-mssql
+acceptance-test-linux
 
 [jenkins:children]
 acceptance
