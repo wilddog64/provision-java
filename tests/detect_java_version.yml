@@ -9,4 +9,4 @@
     
     - name: output java version
       debug:
-        var: "{{ java }}"
+        var: java.stderr
