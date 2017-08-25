@@ -2,11 +2,6 @@
 - hosts: all
 
   pre_tasks:
-    - name: detect java version
-      shell: >
-        {{ ansible_env.JAVA_HOME }}/bin/java -version
-      register: java
-    
-    - name: output java version
-      debug:
-        var: java.stderr
+      - name: output java version
+        debug:
+          var:  ohai_languages.java.version 
