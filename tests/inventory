@@ -39,7 +39,7 @@ r6x64os-vm402.pd.local
 r6x64os-vm403.pd.local
 r6x64os-vm404.pd.local
 
-[acceptance-test-oracle]
+[acceptance-test-oracle:children]
 acceptance-test-oracle-java7
 acceptance-test-oracle-java8
 
