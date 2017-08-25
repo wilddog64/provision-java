@@ -1,0 +1,7 @@
+---
+- hosts: all
+
+  pre_tasks:
+      - name: output java version
+        debug:
+          var:  ohai_languages.java.version 
