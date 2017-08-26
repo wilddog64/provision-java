@@ -13,13 +13,13 @@ r6x64os-vm409.pd.local
 r6x64os-vm410.pd.local
 
 [acceptance-test-mssql]
-w8x64s12-vm083.pd.local
-w8x64s12-vm078.pd.local
-w8x64s12-vm079.pd.local
-w8x64s12-vm080.pd.local
-w8x64s12-vm081.pd.local
-w8x64s12-vm076.pd.local
-w8x64s12-vm005.pd.local
+w8x64s12-vm083.pd.local # Acceptance-Test-Slave-MSSql-02
+w8x64s12-vm078.pd.local # Acceptance-Test-Slave-MSSql-03
+w8x64s12-vm079.pd.local # Acceptance-Test-Slave-MSSql-04
+w8x64s12-vm080.pd.local # Acceptance-Test-Slave-MSSql-05
+w8x64s12-vm081.pd.local # Acceptance-Test-Slave-MSSql-06
+w8x64s12-vm076.pd.local # Acceptance-Test-Slave-MSSql-07
+w12dgs14-vm005.pd.local # Acceptance-Test-Slave-MSSql-09
 
 [acceptance-test-mssql:vars]
 ansible_user=administrator
