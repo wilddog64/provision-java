@@ -38,7 +38,11 @@ Including an example of how to use your role (for instance, with variables passe
 
 ## Command Line Usage
 
-* ansible-playbook -vv -i tests/inventory -l test-jenkins -k tests/playbook.yml will apply playbook to a label test-jenkins defines in tests/inventory file. It will ask password for ssh session, and output level 2 verbosity to console
+* ansible-playbook -vv -l jenkins-slaves -k tests/playbook.yml will apply playbook to a label test-jenkins defines in tests/inventory file. It will ask password for ssh session, and output level 2 verbosity to console
+
+## Note
+* a seperate inventory file for jenkins and jenkins slaves is created and set this in ansible.cfg file. You will need to pull the inventory repo from [here]sh://git@stash.bbpd.io/lid/ansible_inventory.git) in order for the above command to work
+* a special logic is created for handling JCE 7, but nothing change from the commad line or playbook
 
 ## License
 
