@@ -90,3 +90,4 @@ ansible_connection=smart
 
 [internaldeploy]
 internaldeploy-jenkins.int.bbpd.io
+staging-internaldeploy-jenkins.int.bbpd.io
