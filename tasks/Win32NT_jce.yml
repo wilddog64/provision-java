@@ -32,17 +32,6 @@
     creates: "{{ jce_location }}/local_policy.jar"
   become: no
 
-- name: set jar file permissions
-  file:
-    path: "{{ jce_location }}/{{ item }}"
-    state: file
-    mode: "0755"
-  with_items:
-    - local_policy.jar
-    - US_export_policy.jar
-  when: ansible_system == "Linux"
-  become: no
-
 - name: create symlinks to jce files
   file:
     src: "{{ jce_location }}/{{ item }}"
