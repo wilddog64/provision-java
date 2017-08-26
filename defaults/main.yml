@@ -2,5 +2,6 @@
 # defaults file for ansible-java
 oracle_java_vesion: 8
 oracle_jce_url: http://download.oracle.com/otn-pub/java/jce/{{ oracle_java_version }}/jce_policy-{{ oracle_java_version }}.zip
+oracle_jce7_url: http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip
 oracle_jce_home: /opt/java_jce
 require_oracle_java: yes
