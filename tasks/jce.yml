@@ -51,6 +51,7 @@
   shell: >
     {{ ansible_env.JAVA_HOME }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
   register: jce
+  changed_when: False
 
 - name: set a jce fact
   set_fact:
