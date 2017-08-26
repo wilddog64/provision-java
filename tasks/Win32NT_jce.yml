@@ -4,12 +4,9 @@
     jce_location: "{{ oracle_jce_home }}-{{ oracle_java_version }}"
 
 - name: create jce home
-  file:
+  win_file:
     path: "{{ jce_location }}"
     state: directory
-    owner: root
-    group: root
-    mode: "0755"
   become: no
 
 - name: download oracle_jce {{ oracle_java_version }}
