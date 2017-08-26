@@ -26,8 +26,9 @@
   become: no
 
 - name: extract jce zip file
-  command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
-  args:
+  win_unzip:
+    src: "{{ oracle_jce_download_location }}"
+    dest: "{{ jce_location }}"
     creates: "{{ jce_location }}/local_policy.jar"
   become: no
 
