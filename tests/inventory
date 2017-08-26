@@ -25,19 +25,19 @@ w12dgs14-vm005.pd.local # Acceptance-Test-Slave-MSSql-09
 ansible_user=administrator
 
 [acceptance-test-oracle-java7]
-r6x64os-vm379.pd.local
+r6x64os-vm379.pd.local # Acceptance-Test-Slave-Oracle-05
 
 [acceptance-test-oracle-java8]
-r6x64os-vm371.pd.local
-r6x64os-vm372.pd.local
-r6x64os-vm380.pd.local
-r6x64os-vm398.pd.local
-r6x64os-vm399.pd.local
-r6x64os-vm400.pd.local
-r6x64os-vm401.pd.local
-r6x64os-vm402.pd.local
-r6x64os-vm403.pd.local
-r6x64os-vm404.pd.local
+r6x64os-vm371.pd.local # Acceptance-Test-Slave-Oracle-12
+r6x64os-vm372.pd.local # Acceptance-Test-Slave-Oracle-13
+r6x64os-vm380.pd.local # Acceptance-Test-Slave-Oracle-11
+r6x64os-vm398.pd.local # Acceptance-Test-Slave-Oracle-14
+r6x64os-vm399.pd.local # Acceptance-Test-Slave-Oracle-15
+r6x64os-vm400.pd.local # Acceptance-Test-Slave-Oracle-16
+r6x64os-vm401.pd.local # Acceptance-Test-Slave-Oracle-17
+r6x64os-vm402.pd.local # Acceptance-Test-Slave-Oracle-18
+r6x64os-vm403.pd.local # Acceptance-Test-Slave-Oracle-19
+r6x64os-vm404.pd.local # Acceptance-Test-Slave-Oracle-20
 
 [acceptance-test-oracle:children]
 acceptance-test-oracle-java7
