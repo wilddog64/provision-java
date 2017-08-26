@@ -44,28 +44,28 @@ acceptance-test-oracle-java7
 acceptance-test-oracle-java8
 
 [acceptance-test-postgresql-java7]
-r6x64os-vm231.pd.local
-r6x64os-vm345.pd.local
-r6x64os-vm346.pd.local
-r6x64os-vm347.pd.local
-r6x64os-vm348.pd.local
-r6x64os-vm354.pd.local
+r6x64os-vm348.pd.local # Acceptance-Test-Slave-Postgresql-06
+r6x64os-vm347.pd.local # Acceptance-Test-Slave-Postgresql-05
+r6x64os-vm346.pd.local # Acceptance-Test-Slave-Postgresql-04
+r6x64os-vm345.pd.local # Acceptance-Test-Slave-Postgresql-03
+r6x64os-vm354.pd.local # Acceptance-Test-Slave-Postgresql-02
+r6x64os-vm231.pd.local # Acceptance-Test-Slave-Postgresql-01
 
 [acceptance-test-postgresql-java8]
-r6x64os-vm349.pd.local
-r6x64os-vm350.pd.local
-r6x64os-vm351.pd.local
-r6x64os-vm352.pd.local
-r6x64os-vm388.pd.local
-r6x64os-vm389.pd.local
-r6x64os-vm390.pd.local
-r6x64os-vm391.pd.local
-r6x64os-vm392.pd.local
-r6x64os-vm393.pd.local
-r6x64os-vm394.pd.local
-r6x64os-vm395.pd.local
-r6x64os-vm396.pd.local
-r6x64os-vm424.pd.local
+r6x64os-vm349.pd.local # Acceptance-Test-Slave-Postgresql-08
+r6x64os-vm350.pd.local # Acceptance-Test-Slave-Postgresql-07
+r6x64os-vm351.pd.local # Acceptance-Test-Slave-Postgresql-11
+r6x64os-vm352.pd.local # Acceptance-Test-Slave-Postgresql-12
+r6x64os-vm388.pd.local # Acceptance-Test-Slave-Postgresql-09
+r6x64os-vm389.pd.local # Acceptance-Test-Slave-Postgresql-13
+r6x64os-vm390.pd.local # Acceptance-Test-Slave-Postgresql-14
+r6x64os-vm391.pd.local # Acceptance-Test-Slave-Postgresql-15
+r6x64os-vm392.pd.local # Acceptance-Test-Slave-Postgresql-16
+r6x64os-vm393.pd.local # Acceptance-Test-Slave-Postgresql-17
+r6x64os-vm394.pd.local # Acceptance-Test-Slave-Postgresql-18
+r6x64os-vm395.pd.local # Acceptance-Test-Slave-Postgresql-19
+r6x64os-vm396.pd.local # Acceptance-Test-Slave-Postgresql-20
+r6x64os-vm424.pd.local # Acceptance-Test-Slave-Postgresql-10
 
 [acceptance-test-postgresql:children]
 acceptance-test-postgresql-java7
