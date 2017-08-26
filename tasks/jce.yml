@@ -12,19 +12,19 @@
     mode: "0755"
 
 - name: download oracle_jce {{ oracle_java_version }}
-  command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o /tmp/jce-{{ oracle_java_version }}.zip {{ oracle_jce_url }}
+  command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip {{ oracle_jce_url }}
   args:
-    creates: /tmp/jce-{{ oracle_java_version }}.zip
+    creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
   when: oracle_java_version == "8"
 
 - name: download oracle_jce 7
-  command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o /tmp/jce-{{ oracle_java_version }}.zip {{ oracle_jce7_url }}
+  command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip {{ oracle_jce7_url }}
   args:
-    creates: /tmp/jce-{{ oracle_java_version }}.zip
+    creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
   when: oracle_java_version == "7"
 
 - name: extract jce zip file
-  command: unzip -j /tmp/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
+  command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
   args:
     creates: "{{ jce_location }}/local_policy.jar"
 

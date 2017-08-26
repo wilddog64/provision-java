@@ -1,1 +1,2 @@
 oracle_jce_home: /opt/java_jce
+oracle_jce_download_location: /tmp
