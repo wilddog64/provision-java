@@ -10,23 +10,27 @@
     owner: root
     group: root
     mode: "0755"
+  become: no
 
 - name: download oracle_jce {{ oracle_java_version }}
   command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip {{ oracle_jce_url }}
   args:
     creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
   when: oracle_java_version == "8"
+  become: no
 
 - name: download oracle_jce 7
   command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip {{ oracle_jce7_url }}
   args:
     creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
   when: oracle_java_version == "7"
+  become: no
 
 - name: extract jce zip file
   command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
   args:
     creates: "{{ jce_location }}/local_policy.jar"
+  become: no
 
 - name: set jar file permissions
   file:
@@ -37,6 +41,7 @@
     - local_policy.jar
     - US_export_policy.jar
   when: ansible_system == "Linux"
+  become: no
 
 - name: create symlinks to jce files
   file:
@@ -48,12 +53,14 @@
     - local_policy.jar
     - US_export_policy.jar
   when: ansible_system == "Linux"
+  become: no
 
 - name: check if jce is enabled
   shell: >
     {{ ansible_env.JAVA_HOME }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
   register: jce
   changed_when: False
+  become: no
 
 - name: set a jce fact
   set_fact:
