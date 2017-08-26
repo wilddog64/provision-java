@@ -2,8 +2,8 @@
 # tasks file for ansible-java
 - name: collect facts
   setup:
+  become: no
 
-- include_vars: "{{ ansible_os_family }}.yml"
 - include_vars: "{{ ansible_system }}.yml"
 
 - name: output facts
@@ -12,4 +12,5 @@
 
 - include: "tasks/install-{{ ansible_os_family }}-java.yml"
   when: require_oracle_java
-- include: "tasks/jce.yml"
+
+- include: "tasks/{{ ansible_system }}_jce.yml"
