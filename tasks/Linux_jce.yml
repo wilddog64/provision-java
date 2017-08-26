@@ -36,6 +36,7 @@
   with_items:
     - local_policy.jar
     - US_export_policy.jar
+  when: ansible_system == "Linux"
 
 - name: create symlinks to jce files
   file:
@@ -46,6 +47,7 @@
   with_items:
     - local_policy.jar
     - US_export_policy.jar
+  when: ansible_system == "Linux"
 
 - name: check if jce is enabled
   shell: >
