@@ -11,7 +11,7 @@
     group: root
     mode: "0755"
 
-- name: download oracle_jce 8
+- name: download oracle_jce {{ oracle_java_version }}
   command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o /tmp/jce-{{ oracle_java_version }}.zip {{ oracle_jce_url }}
   args:
     creates: /tmp/jce-{{ oracle_java_version }}.zip
