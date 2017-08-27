@@ -27,9 +27,3 @@
   register: download
   notify: download_jar
   become: no
-
-- name: extract jce zip file
-  win_command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
-  args:
-    creates: "{{ jce_location }}/local_policy.jar"
-  become: no
