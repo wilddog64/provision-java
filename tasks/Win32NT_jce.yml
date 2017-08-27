@@ -33,6 +33,7 @@
   win_command: >
     bash -c find . -lname '{{ ansible_env.JAVA_HOME }}\jre\lib\security\local_policy.jar'
   register: win
+  changed_when: False
   become: no
 
 - name: remove distributed jce files
