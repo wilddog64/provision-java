@@ -7,6 +7,20 @@ an Ansible role that will install oracle java and jce
 * Python 2.7 or greater
 * Ansible 2.0 or greater
 
+# Ansible.cfg
+
+In order to speed up facts gathering, we need to enable facts caching by adding these in the ```ansible.cfg [defaults] section```,
+
+    fact_caching = jsonfile
+    fact_caching_connection = $HOME/.ansible/tmp
+    gathering = smart
+
+To point to custom inventory file
+
+    inventory = $HOME/src/gitrepo/personal/ansible/ansible_inventory/inventory
+
+You will need to pull ansible_inventory repo from [here](https://stash.bbpd.io/projects/LID/repos/ansible_inventory/browse)
+
 ## Role Variables
 These variables control how provision-oracle-java behavior
 
@@ -45,10 +59,14 @@ Including an example of how to use your role (for instance, with variables passe
 
 * ansible-playbook -vv -l jenkins-slaves -k tests/playbook.yml will apply playbook to a label test-jenkins defines in tests/inventory file. It will ask password for ssh session, and output level 2 verbosity to console
 * ansible-playbook -vvv -l w8x64s12-vm076.pd.local --extra-vars 'require_oracle_java=False oracle_java_version=8' -k tests/playbook.yml will install ```jce-8``` to a signle host w8x64s12-vm076.pd.local. Note that we have to specify oracle_java_version=8 in order to download jce 8
+* ansible-playbook -vvv -l acceptance-test-oracle-java8 --extra-vars 'require_oracle_java=False oracle_java_version=8' -k tests/playbook.yml will install ```jce-8``` all the nodes under acceptance-test-oracle_java8 group.
+* ansible-playbook -vvv -l acceptance-test-oracle-java8 --list-hosts will list all the hosts in acceptance-test-oracle-java8 group.
+
 
 ## Note
 * a seperate inventory file for jenkins and jenkins slaves is created and set this in ansible.cfg file. You will need to pull the inventory repo from [here]sh://git@stash.bbpd.io/lid/ansible_inventory.git) in order for the above command to work
 * a special logic is created for handling JCE 7, but nothing change from the commad line or playbook
+* -k in ansible-playbook will prompt to ask for SSH password
 
 ## License
 
