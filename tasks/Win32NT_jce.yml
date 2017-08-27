@@ -29,20 +29,24 @@
     creates: "{{ jce_location }}/local_policy.jar"
   become: no
 
-- name: create symlinks to jce files
-  file:
-    src: "{{ jce_location }}/{{ item }}"
-    dest: "{{ ansible_env.JAVA_HOME }}/jre/lib/security/{{ item }}"
-    force: yes
-    state: link
+- name: remove distributed jce files
+  win_file:
+    path: '{{ ansible_env.JAVA_HOME }}\jre\lib\security\{{ item }}'
+    state: absent
   with_items:
     - local_policy.jar
     - US_export_policy.jar
-  when: ansible_system == "Linux"
+  become: no
+
+- name: create symlinks to jce files
+  win_shell: cmd /c mklink "{{ ansible_env.JAVA_HOME }}\jre\lib\security\{{ item }}" "{{ jce_location }}\{{ item }}"
+  with_items:
+    - local_policy.jar
+    - US_export_policy.jar
   become: no
 
 - name: check if jce is enabled
-  shell: >
+  win_shell: >
     {{ ansible_env.JAVA_HOME }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
   register: jce
   changed_when: False
