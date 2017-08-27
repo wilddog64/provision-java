@@ -8,14 +8,14 @@
     - local_policy.jar
     - US_export_policy.jar
   become: no
-  listen: download_jar
+  listen: win_download_jar
 
 - name: extract jce zip file
   win_command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
   args:
     creates: "{{ jce_location }}/local_policy.jar"
   become: no
-  listen: download_jar
+  listen: win_download_jar
 
 - name: create symlinks to jce files
   win_shell: cmd /c mklink "{{ ansible_env.JAVA_HOME }}\jre\lib\security\{{ item }}" "{{ jce_location }}\{{ item }}"
@@ -23,4 +23,4 @@
     - local_policy.jar
     - US_export_policy.jar
   become: no
-  listen: download_jar
+  listen: win_download_jar
