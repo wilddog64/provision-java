@@ -10,14 +10,14 @@
   become: no
 
 - name: download oracle_jce {{ oracle_java_version }}
-  win_shell: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' {{ oracle_jce_url }} -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip
+  win_command: c:\cygwin64\bin\curl -k -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' {{ oracle_jce_url }} -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip
   args:
     creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
   when: oracle_java_version == "8"
   become: no
 
 - name: download oracle_jce 7
-  win_shell: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' {{ oracle_jce7_url }} -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip
+  win_command: curl -k -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' {{ oracle_jce7_url }} -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip
   args:
     creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
   when: oracle_java_version == "7"
