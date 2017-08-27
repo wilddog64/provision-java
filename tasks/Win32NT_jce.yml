@@ -10,10 +10,13 @@
   become: no
 
 - name: download oracle_jce {{ oracle_java_version }}
-  win_command: c:\cygwin64\bin\curl -k -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' {{ oracle_jce_url }} -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip
+  win_command: curl -k -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' {{ oracle_jce_url }} -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip
   args:
     creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+  register: download
   when: oracle_java_version == "8"
+  notify: download_jar
+
   become: no
 
 - name: download oracle_jce 7
@@ -21,35 +24,12 @@
   args:
     creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
   when: oracle_java_version == "7"
+  register: download
+  notify: download_jar
   become: no
 
 - name: extract jce zip file
   win_command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
   args:
     creates: "{{ jce_location }}/local_policy.jar"
-  become: no
-
-- name: check if files are symlinked
-  win_command: >
-    bash -c find . -lname '{{ ansible_env.JAVA_HOME }}\jre\lib\security\local_policy.jar'
-  register: win
-  changed_when: False
-  become: no
-
-- name: remove distributed jce files
-  win_file:
-    path: '{{ ansible_env.JAVA_HOME }}\jre\lib\security\{{ item }}'
-    state: absent
-  with_items:
-    - local_policy.jar
-    - US_export_policy.jar
-  when: win.rc != 0
-  become: no
-
-- name: create symlinks to jce files
-  win_shell: cmd /c mklink "{{ ansible_env.JAVA_HOME }}\jre\lib\security\{{ item }}" "{{ jce_location }}\{{ item }}"
-  with_items:
-    - local_policy.jar
-    - US_export_policy.jar
-  when: win.rc != 0
   become: no
