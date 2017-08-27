@@ -16,7 +16,6 @@
   register: download
   when: oracle_java_version == "8"
   notify: download_jar
-
   become: no
 
 - name: download oracle_jce 7
