@@ -1,0 +1,28 @@
+---
+- name: create jce path
+  set_fact:
+    jce_location: "{{ oracle_jce_home }}-{{ oracle_java_version }}"
+
+- name: create jce home
+  win_file:
+    path: "{{ jce_location }}"
+    state: directory
+  become: no
+
+- name: download oracle_jce {{ oracle_java_version }}
+  win_command: curl -k -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' {{ oracle_jce_url }} -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip
+  args:
+    creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+  register: download
+  when: oracle_java_version == "8"
+  notify: win_download_jar
+  become: no
+
+- name: download oracle_jce 7
+  win_command: curl -k -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' {{ oracle_jce7_url }} -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip
+  args:
+    creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+  when: oracle_java_version == "7"
+  register: download
+  notify: win_download_jar
+  become: no

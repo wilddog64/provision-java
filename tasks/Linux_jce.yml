@@ -1,0 +1,40 @@
+---
+- name: create jce path
+  set_fact:
+    jce_location: "{{ oracle_jce_home }}-{{ oracle_java_version }}"
+
+- name: create jce home
+  file:
+    path: "{{ jce_location }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: download oracle_jce {{ oracle_java_version }}
+  command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip {{ oracle_jce_url }}
+  args:
+    creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+  when: oracle_java_version == "8"
+  notify: lnx_download_jar
+
+- name: download oracle_jce 7
+  command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip {{ oracle_jce7_url }}
+  args:
+    creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+  when: oracle_java_version == "7"
+  notify: lnx_download_jar
+
+- name: check if jce is enabled
+  shell: >
+    {{ ansible_env.JAVA_HOME }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
+  register: jce
+  changed_when: False
+
+- name: set a jce fact
+  set_fact:
+    jce_enabled: "{{ jce.stdout }}"
+
+- assert:
+    that:
+      - jce_enabled == true
