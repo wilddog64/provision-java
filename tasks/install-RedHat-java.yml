@@ -9,6 +9,12 @@
 #     creates: "/tmp/{{ oracle_java_rpm_filename }}"
 #   register: java_rpm
 
+- name: install libselinux-python when os is RedHat 6
+  pip:
+    name: libselinux-python
+    state: present
+  when: ansible_distribution_major_version == "6"
+
 - name: construct oracle home path
   set_fact:
     oracle_java_home: "/usr/java/jdk1.{{ oracle_java_version }}.0_{{ oracle_java_version_update }}"

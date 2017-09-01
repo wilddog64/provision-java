@@ -25,6 +25,21 @@
   when: oracle_java_version == "7"
   notify: lnx_download_jar
 
+- name: extract jce zip file
+  command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
+  args:
+    creates: "{{ jce_location }}/local_policy.jar"
+
+- name: create symlinks to jce files
+  file:
+    src: "{{ jce_location }}/{{ item }}"
+    dest: "{{ ansible_env.JAVA_HOME }}/jre/lib/security/{{ item }}"
+    force: yes
+    state: link
+  with_items:
+    - local_policy.jar
+    - US_export_policy.jar
+
 - name: check if jce is enabled
   shell: >
     {{ ansible_env.JAVA_HOME }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
