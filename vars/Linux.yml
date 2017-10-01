@@ -1,2 +1,5 @@
 oracle_jce_home: /opt/java_jce
 oracle_jce_download_location: /tmp
+learn_install_root: /usr/local/blackboard
+learn_config_root: "{{ learn_install_root }}/config"
+learn_config_file: "{{ learn_config_root }}/bb-config.properties"
