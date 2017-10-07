@@ -15,3 +15,4 @@
   when: require_oracle_java
 
 - include_tasks: "tasks/{{ ansible_system }}_jce.yml"
+  when: require_jce
