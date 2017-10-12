@@ -33,7 +33,7 @@
 - name: create symlinks to jce files
   file:
     src: "{{ jce_location }}/{{ item }}"
-    dest: "{{ ansible_env.JAVA_HOME }}/jre/lib/security/{{ item }}"
+    dest: "{{ oracle_java_home }}/jre/lib/security/{{ item }}"
     force: yes
     state: link
   with_items:
@@ -42,7 +42,7 @@
 
 - name: check if jce is enabled
   shell: >
-    {{ ansible_env.JAVA_HOME }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
+    {{ oracle_java_home }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
   register: jce
   changed_when: False
 
