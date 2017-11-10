@@ -27,6 +27,15 @@
     pkg: "oracle-java{{ oracle_java_version }}-installer"
   when: java_present.stat.exists == False
 
+- name: get java_home variable
+  shell: >
+    cat /etc/profile.d/jdk.sh | sed -nE 's/export JAVA_HOME=(.*)$/\1/p'
+  register: java
+
+- name: create JAVA_HOME facts
+  set_fact:
+    oracle_java_home: "{{ java.stdout }}"
+
 - name: deploy an update .bashrc to root
   copy:
     src: files/bashrc
