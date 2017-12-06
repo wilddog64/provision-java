@@ -31,6 +31,7 @@ These variables control how provision-oracle-java behavior
 * oracle_jce7_url is where to download oracle jce 7 package (naming is out of whack)
 * oracle_jce_home is where oracle jce to be extracted to
 * require_oracle_java is a boolean flag to determine if java need to be installed. Default is yes.
+* require_jce is a boolean flag to determine if jce need to be installed. Default is yes.
 
 ### platform specific variables
 

@@ -14,7 +14,7 @@
   args:
     creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
   register: download
-  when: oracle_java_version == "8"
+  when: oracle_java_version == 8
   notify: win_download_jar
   become: no
 
@@ -22,7 +22,7 @@
   win_command: curl -k -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' {{ oracle_jce7_url }} -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip
   args:
     creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
-  when: oracle_java_version == "7"
+  when: oracle_java_version == 7
   register: download
   notify: win_download_jar
   become: no

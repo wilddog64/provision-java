@@ -2,7 +2,7 @@
 # handlers file for ansible-java
 - name: remove distributed jce files
   win_file:
-    path: '{{ ansible_env.JAVA_HOME }}\jre\lib\security\{{ item }}'
+    path: '{{ oracle_java_home }}\jre\lib\security\{{ item }}'
     state: absent
   with_items:
     - local_policy.jar
@@ -18,7 +18,7 @@
   listen: win_download_jar
 
 - name: create symlinks to jce files
-  win_shell: cmd /c mklink "{{ ansible_env.JAVA_HOME }}\jre\lib\security\{{ item }}" "{{ jce_location }}\{{ item }}"
+  win_shell: cmd /c mklink "{{ oracle_java_home }}\jre\lib\security\{{ item }}" "{{ jce_location }}\{{ item }}"
   with_items:
     - local_policy.jar
     - US_export_policy.jar
@@ -44,7 +44,7 @@
 - name: create symlinks to jce files
   file:
     src: "{{ jce_location }}/{{ item }}"
-    dest: "{{ ansible_env.JAVA_HOME }}/jre/lib/security/{{ item }}"
+    dest: "{{ oracle_java_home }}/jre/lib/security/{{ item }}"
     force: yes
     state: link
   with_items:

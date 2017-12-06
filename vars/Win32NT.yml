@@ -1,2 +1,5 @@
 oracle_jce_home: c:\opt\java_jce
 oracle_jce_download_location: c:\temp
+learn_install_root: c:\blackboard
+learn_config_root: "{{ learn_install_root }}/config"
+learn_config_file: "{{ learn_config_root }}/bb-config.properties"
