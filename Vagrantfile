@@ -16,9 +16,9 @@ Vagrant.configure("2") do |config|
 
   # configure ansible provisioner
   config.vm.provision :ansible do | ansible |
-    ansible.limit = 'all'                   # apply to a Vagrant host
+    ansible.limit    = 'all'                # apply to a Vagrant host
     ansible.playbook = 'tests/playbook.yml' # point to local playbook for easy testing
-    ansible.verbose = 'vv'                  # minimum verbose
+    ansible.verbose  = 'vv'                 # minimum verbose
   end
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
