@@ -12,13 +12,16 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = 'centos/7'
+  config.vm.box = 'ubuntu/xenial64'
 
   # configure ansible provisioner
   config.vm.provision :ansible do | ansible |
     ansible.limit    = 'all'                # apply to a Vagrant host
     ansible.playbook = 'tests/playbook.yml' # point to local playbook for easy testing
     ansible.verbose  = 'vv'                 # minimum verbose
+    ansible.extra_vars = {
+        'ansible_python_interpreter' => '/usr/bin/python3',
+    }
   end
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
