@@ -28,42 +28,23 @@
   args:
     creates: "{{ jce_location }}/local_policy.jar"
 
-- block:
-  - name: create symlinks to jce files
-    file:
-      src: "{{ jce_location }}/{{ item }}"
-      dest: "{{ ansible_env.JAVA_HOME }}/jre/lib/security/{{ item }}"
-      force: yes
-      state: link
-    register: symlinks
-    with_items:
-      - local_policy.jar
-      - US_export_policy.jar
-  rescue:
-  - name: create symlinks to jce files via oracle_java_home variable
-    file:
-      src: "{{ jce_location }}/{{ item }}"
-      dest: "{{ oracle_java_home }}/jre/lib/security/{{ item }}"
-      force: yes
-      state: link
-    with_items:
-      - local_policy.jar
-      - US_export_policy.jar
-    when: "'JAVA_HOME' in symlinks.msg"
+- name: create symlinks to jce files
+  file:
+    src: "{{ jce_location }}/{{ item }}"
+    dest: "{{ oracle_java_home }}/jre/lib/security/{{ item }}"
+    force: yes
+    state: link
+  register: symlinks
+  with_items:
+    - local_policy.jar
+    - US_export_policy.jar
 
-- block:
-  - name: check if jce is enabled
-    shell: >
-      {{ ansible_env.JAVA_HOME }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
-    register: jce
-    changed_when: False
-  rescue:
-  - name: install by using oracle_java_home variable
-    shell: >
-      {{ oracle_java_home }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
-    register: jce
-    changed_when: False
-    when: "'JAVA_HOME' in jce.msg"
+- name: check if jce is enabled
+  shell: >
+    {{ oracle_java_home }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
+  register: jce
+  changed_when: False
+
 
 - name: set a jce fact
   set_fact:
@@ -71,4 +52,4 @@
 
 - assert:
     that:
-      - jce_enabled == true
+      - jce_enabled
