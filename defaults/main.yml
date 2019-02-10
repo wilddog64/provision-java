@@ -5,9 +5,3 @@ oracle_jce_url: http://download.oracle.com/otn-pub/java/jce/{{ oracle_java_versi
 oracle_jce7_url: http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip
 require_oracle_java: yes
 require_jce: yes
-oracle_jce_home: /opt/java_jce
-oracle_jce_download_location: /tmp
-learn_install_root: /usr/local/blackboard
-learn_config_root: "{{ learn_install_root }}/config"
-learn_config_file: "{{ learn_config_root }}/bb-config.properties"
-
