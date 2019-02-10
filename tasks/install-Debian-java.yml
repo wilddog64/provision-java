@@ -2,11 +2,8 @@
 # tasks file for ansible-java
 - name: install required packages
   apt:
-    name: "{{ item }}"
+    name: [ 'curl', 'unzip' ]
     state: present
-  with_items:
-    - curl
-    - unzip
 
 - name: check if it is present
   stat: path=/usr/bin/java
