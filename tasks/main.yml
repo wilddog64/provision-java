@@ -4,8 +4,13 @@
   setup:
   become: no
 
-- include_vars: "{{ ansible_system }}.yml"
-- include_vars: "{{ ansible_os_family }}.yml"
+- include_vars:
+    name: system variables
+    file: "{{ ansible_system }}.yml"
+
+- include_vars:
+    name: os variables
+    file: "{{ ansible_os_family }}.yml"
 
 - name: output facts
   debug:
