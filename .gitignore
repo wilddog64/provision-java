@@ -4,3 +4,4 @@ Gemfile.lock
 .kitchen/
 secrets/
 *.log
+.direnv/
