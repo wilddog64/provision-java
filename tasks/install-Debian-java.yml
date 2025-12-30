@@ -29,12 +29,12 @@
         state: present
   when: not java_present.stat.exists
 
-- name: install
+- name: install adoptium java
   apt:
     update-cache: yes
     force: yes
     state: present
-    pkg: "oracle-java{{ oracle_java_version }}-installer"
+    pkg: "temurin-{{ jdk_release }}-jdk"
   when: not java_present.stat.exists
 
 - name: get java_home variable
