@@ -9,7 +9,7 @@
     - gpg
     state: present
 
-- name: check if it is present
+- name: check if java presents
   stat: path=/usr/bin/java
   register: java_present
 
