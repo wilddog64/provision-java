@@ -52,11 +52,6 @@
       export PATH=$JAVA_HOME/bin:$PATH
   when: java_home.stdout != ""
 
-- name: create JAVA_HOME facts
-  set_fact:
-    adoptium_java_home: "{{ java_home.stdout }}"
-  when: java_home.stdout != ""
-
 - name: set JAVA_HOME fact
   set_fact:
     java_home: "{{ java_home.stdout }}"
