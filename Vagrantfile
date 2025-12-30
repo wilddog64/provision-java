@@ -14,11 +14,22 @@ Vagrant.configure("2") do |config|
   # boxes at https://atlas.hashicorp.com/search.
   config.vm.box = 'hashicorp-education/ubuntu-24-04'
 
+  config.vm.provision "shell", inline: <<-SHELL
+set -eu
+sudo mkdir -p /etc/systemd/resolved.conf.d
+cat <<'EOF' | sudo tee /etc/systemd/resolved.conf.d/dns.conf >/dev/null
+[Resolve]
+DNS=1.1.1.1 8.8.8.8
+FallbackDNS=9.9.9.9 8.8.4.4
+EOF
+sudo systemctl restart systemd-resolved
+SHELL
+
   # configure ansible provisioner
   config.vm.provision :ansible do | ansible |
     ansible.limit    = 'all'                # apply to a Vagrant host
     ansible.playbook = 'tests/playbook.yml' # point to local playbook for easy testing
-    ansible.verbose  = 'vv'                 # minimum verbose
+    # ansible.verbose  = 'vv'                 # minimum verbose
     ansible.extra_vars = {
         'ansible_python_interpreter' => '/usr/bin/python3',
     }
