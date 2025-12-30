@@ -19,5 +19,4 @@
 
 - include_tasks: "tasks/query-adoptium-jdk.yml"
 
-- include_tasks: "tasks/{{ ansbile_facts['os_family'] }}_jce.yml"
-  when: require_jce
+- include_tasks: "tasks/install-{{ ansible_facts['os_family'] }}-java.yml"
