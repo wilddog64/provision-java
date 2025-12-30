@@ -2,7 +2,11 @@
 # tasks file for ansible-java
 - name: install required packages
   apt:
-    name: [ 'curl', 'unzip' ]
+    name:
+    - curl
+    - unzip
+    - apt-transport-https
+    - gpg
     state: present
 
 - name: check if it is present
