@@ -17,8 +17,7 @@
   debug:
     var: ansible_facts['os_family']
 
-- include_tasks: "tasks/install-{{ ansible_facts['os_family'] }}-java.yml"
-  when: require_oracle_java
+- include_tasks: "tasks/query-adoptium-jdk.yml"
 
 - include_tasks: "tasks/{{ ansbile_facts['os_family'] }}_jce.yml"
   when: require_jce

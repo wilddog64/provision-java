@@ -1,0 +1,89 @@
+---
+- name: Get Adoptium available releases
+  ansible.builtin.uri:
+    url: https://api.adoptium.net/v3/info/available_releases
+    method: GET
+    return_content: true
+  register: adoptium_releases
+
+- name: Set JDK release (override or tip_version)
+  ansible.builtin.set_fact:
+    jdk_release: "{{ (jdk_version | default(adoptium_releases.json.tip_version, true)) | string | trim }}"
+    adoptium_channel: "{{ 'ga' if (jdk_version is defined and (jdk_version | string | length) > 0) else 'ea' }}"
+
+- name: Set Adoptium os/arch (minimal)
+  ansible.builtin.set_fact:
+    adoptium_os: "{{ 'windows' if ansible_facts['system'] == 'Win32NT' else ('mac' if ansible_facts['system'] == 'Darwin' else 'linux') }}"
+    adoptium_arch: "{{ 'x64' if ansible_facts['architecture'] in ['x86_64','amd64'] else 'aarch64' }}"
+    adoptium_type_effective: "{{ (adoptium_type | default('jdk', true)) | string | trim }}"
+
+- name: Validate adoptium_type_effective is either jdk or jre
+  ansible.builtin.assert:
+    that:
+      - adoptium_type_effective in ['jdk', 'jre']
+    fail_msg: "adoptium_type must be either 'jdk' or 'jre'. Got '{{ adoptium_type_effective }}'"
+
+- name: Set Adoptium API URL
+  ansible.builtin.set_fact:
+    adoptium_api_url: "https://api.adoptium.net/v3/binary/latest/{{ jdk_release }}/ga/linux/{{ adoptium_arch }}/jdk/hotspot/normal/eclipse"
+    adoptium_install_apiendpoint: "https://api.adoptium.net/v3/installer/latest/{{ jdk_release }}/ga/{{ adoptium_arch }}/{{ adoptium_arch }}/{{ adoptium_type_effective }}/hostspot/normal/eclipse?project=jdk"
+
+- name: Debug JDK download parameters
+  ansible.builtin.debug:
+    msg: "JDK Release: {{ jdk_release }}, Channel: {{ adoptium_channel }}, OS: {{ adoptium_os }}, Arch: {{ adoptium_arch }}, API URL: {{ adoptium_api_url }}"
+
+- name: Debug Adoptium installer endpoint
+  ansible.builtin.debug:
+    msg: "Adoptium Installer API Endpoint: {{ adoptium_install_apiendpoint }}"
+
+- name: Check if JDK release is available
+  ansible.builtin.shell:
+    cmd: |
+      curl -s -w '%{redirect_url}' https://api.adoptium.net/v3/binary/latest/{{ jdk_release }}/ga/{{ adoptium_os }}/{{ adoptium_arch }}/jdk/hotspot/normal/eclipse
+  register: check_jdk_release
+  failed_when: check_jdk_release.rc != 0 and '"errorMessage"' in check_jdk_release.stdout
+
+- name: Set GitHub download url
+  ansible.builtin.set_fact:
+    adoptium_jdk_url: "{{ check_jdk_release.stdout }}"
+  when: check_jdk_release.rc == 0
+
+- name: Output check_jdk_release
+  ansible.builtin.debug:
+    var: adoptium_jdk_url
+
+# - name: Download adoptium JDK
+#   ansible.builtin.get_url:
+#     url: "{{ adoptium_jdk_url }}"
+#     dest: "/tmp/jdk-{{ jdk_release }}-jdk.tar.gz"
+#     mode: '0644'
+#     checksum: "sha256:{{ lookup('url', adoptium_jdk_url + '.sha256.txt') | regex_search('^([a-fA-F0-9]+)', '\\1') }}"
+#   when: check_jdk_release.rc == 0
+
+# - name: Get JDK binary download URL from Adoptium API_URL
+#   ansible.builtin.shell:
+#     cmd: |
+#       FETCH_URL=$(curl -s -w %{redirect_url} "https://api.adoptium.net/v3/binary/latest/{{ jdk_release }}/ga/{{ adoptium_os }}/{{ adoptium_arch }}/jdk/hotspot/normal/eclipse")
+#       curl -OLs -w %{filename_effective} "${FETCH_URL}"
+#   register: fetch_jdk
+#   when: check_jdk_release.rc == 0
+#
+# - name: Verify JDK checksum
+#   ansible.builtin.shell:
+#     cmd: |
+#       # Validate the checksum
+#       curl -Ls "${FETCH_URL}.sha256.txt" | sha256sum -c --status
+
+# - name: Get redirect URL for the JDK binary (no JSON parsing)
+#   ansible.builtin.uri:
+#     url: "https://api.adoptium.net/v3/binary/latest/{{ jdk_release }}/{{ adoptium_channel }}/{{ adoptium_os }}/{{ adoptium_arch }}/jdk/hotspot/normal/eclipse"
+#     method: GET
+#     follow_redirects: all
+#     return_content: false
+#     status_code:
+#       - 200
+#   register: adoptium_bin
+#
+# - name: Use final URL
+#   ansible.builtin.set_fact:
+#     adoptium_jdk_url: "{{ adoptium_bin.url }}"
