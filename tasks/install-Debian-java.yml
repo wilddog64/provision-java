@@ -13,11 +13,20 @@
   stat: path=/usr/bin/java
   register: java_present
 
-- name: add apt repository
-  apt_repository: repo='ppa:webupd8team/java' state=present
-
-- name: accept Oracle license before an installation
-  shell: echo "oracle-java{{ oracle_java_version }}-installer shared/accepted-oracle-license-v1-1 select true" | /usr/bin/debconf-set-selections
+- name: Add Adoptium repository
+  block:
+    - name: Install Adoptium GPG key
+      ansible.builtin.shell: |
+        set -eu
+        wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public \
+          | gpg --dearmor \
+          | tee /etc/apt/trusted.gpg.d/adoptium.gpg >/dev/null
+      args:
+        creates: /etc/apt/trusted.gpg.d/adoptium.gpg
+    - name: add the Adoptium apt repository
+      apt_repository:
+        repo: "deb https://packages.adoptium.net/artifactory/deb {{ ansible_facts['distribution_release'] }} main"
+        state: present
   when: not java_present.stat.exists
 
 - name: install
