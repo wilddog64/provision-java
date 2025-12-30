@@ -37,20 +37,27 @@
     pkg: "temurin-{{ jdk_release }}-jdk"
   when: not java_present.stat.exists
 
-- name: get java_home variable
+- name: Get JAVA_HOME from javac
   shell: >
-    cat /etc/profile.d/jdk.sh | sed -nE 's/export JAVA_HOME=(.*)$/\1/p'
-  register: java
+    dirname "$(dirname "$(readlink -f "$(command -v javac)")")"
+  register: java_home
+  changed_when: false
+
+- name: set JAVA_HOME variable
+  ansible.builtin.copy:
+    dest: /etc/profile.d/java.sh
+    mode: '0644'
+    content: |
+      export JAVA_HOME={{ java_home.stdout }}
+      export PATH=$JAVA_HOME/bin:$PATH
+  when: java_home.stdout != ""
 
 - name: create JAVA_HOME facts
   set_fact:
-    oracle_java_home: "{{ java.stdout }}"
+    adoptium_java_home: "{{ java_home.stdout }}"
+  when: java_home.stdout != ""
 
-- name: deploy an update .bashrc to root
-  copy:
-    src: files/bashrc
-    dest: /root/.bashrc
-    backup: yes
-    owner: root
-    group: root
-    mode: "u=rwx,g=r,o=r"
+- name: set JAVA_HOME fact
+  set_fact:
+    java_home: "{{ java_home.stdout }}"
+  when: java_home.stdout != ""
