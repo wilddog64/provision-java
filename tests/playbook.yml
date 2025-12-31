@@ -5,4 +5,4 @@
   vars:
     jdk_version: 21
   roles:
-    - provision-oracle-java
+    - provision-java
