@@ -1,0 +1,43 @@
+---
+- name: Check current resolv.conf stub
+  ansible.builtin.slurp:
+    src: /etc/resolv.conf
+  register: resolv_conf
+  changed_when: false
+  become: true
+
+- name: Check if systemd-resolved has any upstream DNS servers
+  ansible.builtin.command: resolvectl dns
+  register: resolvectl_dns
+  changed_when: false
+  failed_when: false
+
+- name: Apply systemd-resolved DNS config only when needed
+  when:
+    - "'nameserver 127.0.0.53' in (resolv_conf.content | b64decode)"
+    - resolvectl_dns.stdout is not search('DNS Servers:')  # no upstream shown
+  block:
+    - name: Ensure systemd-resolved drop-in dir exists
+      ansible.builtin.file:
+        path: /etc/systemd/resolved.conf.d
+        state: directory
+        mode: "0755"
+      become: true
+
+    - name: Configure DNS for systemd-resolved
+      ansible.builtin.copy:
+        dest: /etc/systemd/resolved.conf.d/dns.conf
+        mode: "0644"
+        content: |
+          [Resolve]
+          DNS=1.1.1.1 8.8.8.8
+          FallbackDNS=9.9.9.9 8.8.4.4
+      register: resolved_conf
+      become: true
+
+    - name: restart systemd-resolved
+      ansible.builtin.service:
+        name: systemd-resolved
+        state: restarted
+      when: resolved_conf.changed
+      become: true

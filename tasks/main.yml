@@ -17,6 +17,9 @@
   debug:
     var: ansible_facts['os_family']
 
+- include_tasks: "tasks/systemd-resolved.yml"
+  when: ansible_facts['system'] == 'Linux'
+
 - include_tasks: "tasks/query-adoptium-jdk.yml"
 
 - include_tasks: "tasks/install-{{ ansible_facts['os_family'] }}-java.yml"
