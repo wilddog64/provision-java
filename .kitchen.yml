@@ -13,7 +13,7 @@ provisioner:
   host_key_checking: false
   # vault_password_file: ./secrets/my_pass.txt
   idempotency_test: false
-  chef_bootstrap_url: nil
+  chef_bootstrap_url: null
   verbose: vv
   extra_vars:
     env: stage2
@@ -22,8 +22,37 @@ provisioner:
     skip_migration: yes
 
 platforms:
-  - name: precise64-vbaddin-update
-  - name: centos7-update
+  - name: ubuntu-2404
+    driver_config:
+      box: bento/ubuntu-24.04
+  - name: rockylinux9
+    driver_config:
+      box: rockylinux/9
+  - name: win11
+    driver_config:
+      box: gusztavvargadr/windows-11
+      communicator: winrm
+    transport:
+      name: winrm
+      elevated: true
+    provisioner:
+      name: ansible_playbook
+      hosts: test-kitchen
+      require_ansible_repo: true
+      playbook: tests/playbook.yml
+      roles_path: ..
+      ansible_version: latest
+      ansible_host_key_checking: false
+      idempotency_test: false
+      chef_bootstrap_url: null
+      ansible_verbosity: 2
+      require_windows_support: true
+      ansible_connection: winrm
+      extra_vars:
+        env: stage2
+        extract_build_number: 16
+        extract_debug: 'False'
+        skip_migration: yes
 
 suites:
   - name: default
