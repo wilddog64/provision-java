@@ -1,8 +1,10 @@
 source 'https://rubygems.org'
 
-# list gem here
-gem 'librarian-ansible', '3.0.2'
-gem 'test-kitchen', '1.13.2'
-gem 'kitchen-ansiblepush', '0.4.0'
-gem 'kitchen-vagrant', '0.20.0'
-gem 'kitchen-inspec', '0.16.1'
+ruby '>= 4.0.0', '< 5.0'
+
+gem 'test-kitchen'
+gem 'kitchen-ansible'
+gem 'kitchen-ansiblepush'
+gem 'kitchen-vagrant'
+gem 'kitchen-inspec'
+gem 'winrm-elevated'
