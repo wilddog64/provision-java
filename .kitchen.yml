@@ -24,7 +24,7 @@ provisioner:
 platforms:
   - name: ubuntu-2404
     driver_config:
-      box: bento/ubuntu-24.04
+      box: hashicorp-education/ubuntu-24-04
   - name: rockylinux9
     driver_config:
       box: rockylinux/9
@@ -36,7 +36,7 @@ platforms:
       name: winrm
       elevated: true
     provisioner:
-      name: ansible_playbook
+      name: ansible_push
       hosts: test-kitchen
       require_ansible_repo: true
       playbook: tests/playbook.yml
