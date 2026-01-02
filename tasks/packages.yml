@@ -1,0 +1,8 @@
+---
+- name: install required packages
+  package:
+    name:
+      - curl
+      - unzip
+      - gpg
+    state: present
