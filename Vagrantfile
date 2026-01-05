@@ -12,18 +12,13 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = 'hashicorp-education/ubuntu-24-04'
+  config.vm.box = 'stromweld/windows-11'
 
-  config.vm.provision "shell", inline: <<-SHELL
-set -eu
-sudo mkdir -p /etc/systemd/resolved.conf.d
-cat <<'EOF' | sudo tee /etc/systemd/resolved.conf.d/dns.conf >/dev/null
-[Resolve]
-DNS=1.1.1.1 8.8.8.8
-FallbackDNS=9.9.9.9 8.8.4.4
-EOF
-sudo systemctl restart systemd-resolved
-SHELL
+  config.vm.communicator = "winrm"
+  config.winrm.username = "vagrant"
+  config.winrm.password = "vagrant"
+  config.winrm.transport = :plaintext
+  config.winrm.basic_auth_only = true
 
   # configure ansible provisioner
   config.vm.provision :ansible do | ansible |
@@ -31,7 +26,12 @@ SHELL
     ansible.playbook = 'tests/playbook.yml' # point to local playbook for easy testing
     # ansible.verbose  = 'vv'                 # minimum verbose
     ansible.extra_vars = {
-        'ansible_python_interpreter' => '/usr/bin/python3',
+      'ansible_python_interpreter' => '/usr/bin/python3',
+      'ansible_connection' => 'winrm',
+      'ansible_winrm_transport' => 'basic',
+      'ansible_winrm_server_cert_validation' => 'ignore',
+      # 'ansible_port' => 55986,
+      'ansible_winrm_scheme' => 'http',
     }
   end
   # Disable automatic box update checking. If you disable this, then
