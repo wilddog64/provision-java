@@ -28,7 +28,8 @@ platforms:
       box: hashicorp-education/ubuntu-24-04
   - name: rockylinux9
     driver_config:
-      box: rockylinux/9
+      driver_config:
+        box: centos/8
   - name: win11
     driver_config:
       box: gusztavvargadr/windows-11
