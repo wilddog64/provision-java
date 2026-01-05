@@ -1,6 +1,7 @@
 ---
 driver:
   name: vagrant
+  driver: virtualbox
 
 provisioner:
   require_chef_omnibus: false
