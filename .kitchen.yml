@@ -32,13 +32,19 @@ platforms:
         box: centos/8
   - name: win11
     driver_config:
-      box: gusztavvargadr/windows-11
+      box: stromweld/windows-11
       communicator: winrm
     transport:
       name: winrm
       elevated: true
+      ssl_peer_verification: false
+      port: 2202
+      winrm_transport: :plaintext
+      ssl: false
+      connection_retries: 5
+      connection_retry_sleep: 10
     provisioner:
-      name: ansible_push
+      name: ansible_playbook
       hosts: test-kitchen
       require_ansible_repo: true
       playbook: tests/playbook.yml
@@ -50,6 +56,9 @@ platforms:
       ansible_verbosity: 2
       require_windows_support: true
       ansible_connection: winrm
+      ansible_winrm_server_cert_validation: ignore
+      ansible_port: 2202
+      ansible_winrm_scheme: http
       extra_vars:
         env: stage2
         extract_build_number: 16
