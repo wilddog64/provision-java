@@ -1,68 +1,27 @@
 ---
-# - name: download java rpm
-#   uri:
-#     url: "{{ oracle_java_rpm_url }}"
-#     method: GET
-#     HEADER_Content_-Type: Cookie:oraclelicense=accept-securebackup-cookie
-#     follow_redirects: safe
-#     dest: "/tmp/{{ oracle_java_rpm_filename }}"
-#     creates: "/tmp/{{ oracle_java_rpm_filename }}"
-#   register: java_rpm
-
-- name: construct oracle home path
-  set_fact:
-    oracle_java_home: "/usr/java/jdk1.{{ oracle_java_version }}.0_{{ oracle_java_version_update }}"
-    oracle_java_rpm_filename: "jdk-{{ oracle_java_version }}u{{ oracle_java_version_update }}-linux-x64.rpm"
-
-- name: construct oracle rpm url
-  set_fact:
-    oracle_java_rpm_url: "http://download.oracle.com/otn-pub/java/jdk/{{ oracle_java_version }}u{{ oracle_java_version_update }}-b{{ oracle_java_version_build }}/d54c1d3a095b4ff2b6607d096fa80163/{{ oracle_java_rpm_filename }}"
-
-- name: install curl and unzip
-  yum:
-    name: "{{ item }}"
-    state: installed
-  with_items:
-    - curl
-    - unzip
-
-- name: check oracle java rpm file exists or not
-  stat:
-    path: "/tmp/{{ oracle_java_rpm_filename }}"
-  register: oracle_java_rpm
-
-- name: download java rpm
-  shell:
-    "curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o /tmp/{{ oracle_java_rpm_filename }} {{ oracle_java_rpm_url }}"
-  args:
-    creates: "tmp/{{ oracle_java_rpm_filename }}"
-  register: java_rpm
-  when: not oracle_java_rpm.stat.exists
-
-- name: install java rpm
-  yum:
-    name: "/tmp/{{ oracle_java_rpm_filename }}"
+- name: install required packages
+  apt:
+    name:
+    - apt-transport-https
     state: present
-  register: java_state
-  when: java_rpm
 
-- name: set oracle as a default
-  alternatives:
-    name: "{{ item.bin }}"
-    link: "/usr/bin/{{ item.bin }}"
-    path: "{{ item.path }}/{{ item.bin }}"
-  when: java_state.changed
-  with_items:
-    - { path: "{{ oracle_java_home }}/jre/bin", bin: 'java' }
-    - { path: "{{ oracle_java_home }}/jre/bin", bin: 'keytool' }
-    - { path: "{{ oracle_java_home }}/bin", bin: 'javac' }
-    - { path: "{{ oracle_java_home }}/bin", bin: 'java' }
+- name: check if java presents
+  stat: path=/usr/bin/java
+  register: java_present
 
-- name: create a persist JAVA_HOME environment variable
-  copy:
-    content: |
-      export JAVA_HOME={{ oracle_java_home }}
-    dest: /etc/profile.d/jdk.sh
-    owner: root
-    group: root
-    mode: "u=rwx,o=r,g=r"
+- name: Add Adoptium repository
+  block:
+    - name: Install Adoptium GPG key
+      ansible.builtin.shell: |
+        set -eu
+        wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public \
+          | gpg --dearmor \
+          | tee /etc/apt/trusted.gpg.d/adoptium.gpg >/dev/null
+      args:
+        creates: /etc/apt/trusted.gpg.d/adoptium.gpg
+    - name: add the Adoptium apt repository
+      apt_repository:
+        repo: "deb https://packages.adoptium.net/artifactory/deb {{ ansible_facts['distribution_release'] }} main"
+        state: present
+  when: not java_present.stat.exists
+
