@@ -41,6 +41,5 @@
         - java_version_output.rc == 0
         - "'openjdk version' in java_version_output.stderr or 'openjdk version' in java_version_output.stdout"
       fail_msg: "Java installation verification failed"
-      success_msg: "Java {{ java_version | default('21') }} installed successfully at {{ java_home }}"
-
+      success_msg: "Java {{ java_major_version | default('17') }} installed successfully at {{ java_home }}"
   become: no
