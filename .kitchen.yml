@@ -5,7 +5,7 @@ driver:
 
 provisioner:
   require_chef_omnibus: false
-  name: ansible_push
+  name: ansible_playbook
   host: test-kitchen
   require_ansible_repo: true
   playbook: tests/playbook.yml
@@ -38,13 +38,13 @@ platforms:
       name: winrm
       elevated: true
       ssl_peer_verification: false
-      port: 2202
+      port: 5985
       winrm_transport: :plaintext
       ssl: false
       connection_retries: 5
       connection_retry_sleep: 10
     provisioner:
-      name: ansible_playbook
+      name: ansible_push
       hosts: test-kitchen
       require_ansible_repo: true
       playbook: tests/playbook.yml
@@ -55,15 +55,19 @@ platforms:
       chef_bootstrap_url: null
       ansible_verbosity: 2
       require_windows_support: true
-      ansible_connection: winrm
-      ansible_winrm_server_cert_validation: ignore
-      ansible_port: 2202
-      ansible_winrm_scheme: http
       extra_vars:
         env: stage2
         extract_build_number: 16
         extract_debug: 'False'
         skip_migration: yes
+        ansible_connection: winrm
+        ansible_winrm_transport: basic
+        ansible_port: 5985
+        ansible_winrm_scheme: http
+        ansible_winrm_server_cert_validation: ignore
+        ansible_user: vagrant
+        ansible_password: vagrant
+        ansible_host: 127.0.0.1
 
 suites:
   - name: default
