@@ -82,11 +82,27 @@ On a Windows laptop run:
 
 ```
 set KITCHEN_YAML=.kitchen-win.yml
-rbenv exec kitchen test default-win11
+bundle exec kitchen test default-win11
 # or run: make test-win11
 ```
 
 This variant still uses the `ansible_push` provisioner for the Windows platform so Ansible can communicate over WinRM instead of SSH.
+
+#### Installing Ruby/Dependencies on Windows
+
+Test Kitchen relies on Ruby and Bundler. On Windows the quickest path is Chocolatey:
+
+```
+choco install -y ruby --version=3.3.0
+choco install -y git make
+set PATH=C:\\tools\\ruby33\\bin;%PATH%
+gem install bundler:4.0.3
+bundle install
+```
+
+If you prefer RubyInstaller, download the matching Ruby 3.3.x build with MSYS2, install, and then run `ridk install` followed by `gem install bundler:4.0.3`. Either way, ensure `bundle exec kitchen` works before running the Make targets. Since rbenv is not available on native Windows, the Makefile automatically falls back to the standard `kitchen` executable when `rbenv` is missing.
+
+> `choco install make` installs GNU Make (GnuWin). It behaves like GNU Make on Linux but runs under `cmd.exe`, so quote paths with spaces. If anything acts up, just run the Kitchen commands listed in the Makefile manually.
 
 ### Make Targets
 
