@@ -6,7 +6,7 @@ driver:
 provisioner:
   require_chef_omnibus: false
   name: ansible_playbook
-  host: test-kitchen
+  hosts: test-kitchen
   require_ansible_repo: true
   playbook: tests/playbook.yml
   roles_path: ..
