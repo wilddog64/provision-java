@@ -7,11 +7,11 @@
 - name: include vars
   ansible.builtin.include_vars: "{{ item }}"
   with_first_found:
-    - "{{ ansible_facts['os_family'] | lower }}.yml"
-    - default.yml
-  vars:
-    ansible_search_path:
-      - "{{ role_path }}/vars"
+    - files:
+        - "{{ ansible_facts['os_family'] | lower }}.yml"
+        - default.yml
+      paths:
+        - "{{ role_path }}/vars"
 
 - name: output facts
   debug:
