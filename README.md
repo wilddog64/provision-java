@@ -1,73 +1,106 @@
-# provision-oracle-java
+# Provision Oracle Java
 
-an Ansible role that will install oracle java and jce
+An Ansible role that installs Oracle JDK and the matching Java Cryptography Extension (JCE) packages across Linux and Windows hosts. The role is primarily consumed by CI pipelines but can also be run locally through Test Kitchen + Vagrant for iterative testing.
 
 ## Requirements
 
-* Python 2.7 or greater
-* Ansible 2.0 or greater
+- Python 3.9+ on the control node
+- Ansible 2.14+ (role tested with 2.20)
+- Access to the `ansible_inventory` repository referenced in `ansible.cfg`
+- For Windows targets the controller must have `pywinrm` installed
+- Optional local testing stack: Vagrant 2.3+, VirtualBox 7+, Test Kitchen 3.9+
 
-# Ansible.cfg
+## Configuration
 
-In order to speed up facts gathering, we need to enable facts caching by adding these in the ```ansible.cfg [defaults] section```,
+The repository ships with an `ansible.cfg` tuned for faster fact gathering and a custom inventory location. If you keep the defaults you must clone the shared inventory repo into `$HOME/src/gitrepo/personal/ansible/ansible_inventory`.
 
-    fact_caching = jsonfile
-    fact_caching_connection = $HOME/.ansible/tmp
-    gathering = smart
+Key defaults to be aware of:
 
-To point to custom inventory file
-
-    inventory = $HOME/src/gitrepo/personal/ansible/ansible_inventory/inventory
-
-You will need to pull ansible_inventory repo from [here](https://stash.bbpd.io/projects/LID/repos/ansible_inventory/browse)
+```
+fact_caching = jsonfile
+fact_caching_connection = $HOME/.ansible/tmp
+inventory = $HOME/src/gitrepo/personal/ansible/ansible_inventory/java-slave-inventory
+roles_path = ..
+```
 
 ## Role Variables
-These variables control how provision-oracle-java behavior
 
-### platform indedepend variables
+| Variable | Description |
+| --- | --- |
+| `oracle_java_version` | Major Oracle JDK version to install (e.g., `8`, `21`). |
+| `oracle_java_version_update` | (RedHat) Update number for the chosen JDK version. |
+| `oracle_java_version_build` | (RedHat) Build number for the chosen JDK version. |
+| `oracle_jce_url` / `oracle_jce7_url` | Download URL for the JCE archive. |
+| `oracle_jce_home` | Destination directory for extracted JCE files. Automatically varies by OS. |
+| `oracle_jce_download_location` | Temporary path for the downloaded archive (per-OS). |
+| `require_oracle_java` | Toggle full JDK installation. Defaults to `true`. |
+| `require_jce` | Toggle JCE installation. Defaults to `true`. |
 
-* oracle_java_version is a major oracle java version, i.e. 7, 8, ...
-* oracle_jce_url is where to download oracle jce package
-* oracle_jce7_url is where to download oracle jce 7 package (naming is out of whack)
-* oracle_jce_home is where oracle jce to be extracted to
-* require_oracle_java is a boolean flag to determine if java need to be installed. Default is yes.
-* require_jce is a boolean flag to determine if jce need to be installed. Default is yes.
-
-### platform specific variables
-
-#### vars/RedHat.yml - for RedHat family OSes
-* oracle_java_version_update is what update you want to have
-* oracle_java_version_build is what build will it be
-
-#### os system specific variables (these variable loaded based on ansible_system fact)
-* oracle_jce_home is a place where jce should be extracted to. Linux is /opt/java_jce-version and Windows is c:\opt\java_jce-version
-* oracle_jce_download_location is a place where jce.zip file should be downladed to. Linux is /tmp and Windows is c:\temp
-
-## Dependencies
-* For windows, we need to have pywinrm package installed.
+See `vars/` and `vars/*.yml` for platform-specific defaults.
 
 ## Example Playbook
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+```yaml
+---
+- hosts: all
+  become: yes
+  gather_facts: no
+  roles:
+    - windows-base
+    - provision-java
+```
 
-    ---
-    - hosts: all
-      become: yes
-      roles:
-    	- provision-oracle-java
+Run it with:
 
-## Command Line Usage
+```
+ansible-playbook -vv -l <inventory_group> tests/playbook.yml
+```
 
-* ansible-playbook -vv -l jenkins-slaves -k tests/playbook.yml will apply playbook to a label test-jenkins defines in tests/inventory file. It will ask password for ssh session, and output level 2 verbosity to console
-* ansible-playbook -vvv -l w8x64s12-vm076.pd.local --extra-vars 'require_oracle_java=False oracle_java_version=8' -k tests/playbook.yml will install ```jce-8``` to a signle host w8x64s12-vm076.pd.local. Note that we have to specify oracle_java_version=8 in order to download jce 8
-* ansible-playbook -vvv -l acceptance-test-oracle-java8 --extra-vars 'require_oracle_java=False oracle_java_version=8' -k tests/playbook.yml will install ```jce-8``` all the nodes under acceptance-test-oracle_java8 group.
-* ansible-playbook -vvv -l acceptance-test-oracle-java8 --list-hosts will list all the hosts in acceptance-test-oracle-java8 group.
+Add `-k`/`-K` if you need password prompts, and use `--extra-vars` to override role variables (e.g., `--extra-vars 'require_oracle_java=False oracle_java_version=8'`).
 
+## Local Testing With Test Kitchen
 
-## Note
-* a seperate inventory file for jenkins and jenkins slaves is created and set this in ansible.cfg file. You will need to pull the inventory repo from [here]sh://git@stash.bbpd.io/lid/ansible_inventory.git) in order for the above command to work
-* a special logic is created for handling JCE 7, but nothing change from the commad line or playbook
-* -k in ansible-playbook will prompt to ask for SSH password
+Kitchen + Vagrant lets you exercise the role against disposable Linux and Windows guests. The default configuration lives in `.kitchen.yml` and targets:
+
+- Ubuntu 24.04 (hashicorp-education box)
+- Rocky Linux 9 (CentOS 8 box)
+- Windows 11 (stromweld box, WinRM over HTTP)
+
+Typical workflow on macOS/Linux hosts:
+
+```
+direnv allow  # if you rely on .direnv
+rbenv exec kitchen test default-win11
+# or simply: make test-win11
+```
+
+### Windows Host Note
+
+Windows hosts already run WinRM listeners on ports 5985/5986, so VirtualBox cannot forward those ports directly. Use the alternate Kitchen config stored in `.kitchen-win.yml`, which forwards guest WinRM to high ports (25985/25986) and updates the Ansible connection vars accordingly.
+
+On a Windows laptop run:
+
+```
+set KITCHEN_YAML=.kitchen-win.yml
+rbenv exec kitchen test default-win11
+# or run: make test-win11
+```
+
+This variant still uses the `ansible_push` provisioner for the Windows platform so Ansible can communicate over WinRM instead of SSH.
+
+### Make Targets
+
+The Makefile auto-selects `.kitchen.yml` on macOS/Linux and `.kitchen-win.yml` on Windows (override with `KITCHEN_YAML=...`). Handy shortcuts:
+
+```
+make test-win11          # kitchen test default-win11
+make test-ubuntu-2404    # kitchen test default-ubuntu-2404
+make test-rockylinux9    # kitchen test default-rockylinux9
+make converge-<platform> # converge a single instance
+make destroy-<platform>  # tear down a single instance
+```
+
+Replace `<platform>` with `win11`, `ubuntu-2404`, or `rockylinux9`.
 
 ## License
 
