@@ -829,7 +829,7 @@ DEPENDENCIES
   winrm-elevated
 
 RUBY VERSION
-  ruby 4.0.0
+  ruby 3.3.0
 
 BUNDLED WITH
   4.0.3
