@@ -5,14 +5,59 @@
       name: chocolatey
       state: present
 
-  - name: Install "Microsoft-openjdk-{{ java_version | default('21') }}"
+  - name: Set target Java package name
+    set_fact:
+      java_package_name: "Microsoft-openjdk-{{ java_version | default('21') }}"
+
+  - name: Query for existing Microsoft OpenJDK packages
+    ansible.windows.win_shell: |
+      choco list --local-only --exact --all-versions Microsoft-openjdk-* -r
+    register: choco_java_packages
+    changed_when: false
+    failed_when: false
+
+  - name: Parse installed Java packages
+    set_fact:
+      installed_java_packages: "{{ choco_java_packages.stdout_lines | map('split', '|') | list }}"
+    when: choco_java_packages.stdout_lines | length > 0
+
+  - name: Display installed Java packages
+    debug:
+      msg: "Found installed Java packages: {{ installed_java_packages | default([]) }}"
+
+  - name: Check if target version is already installed
+    set_fact:
+      java_already_installed: "{{ installed_java_packages | default([]) | selectattr('0', 'equalto', java_package_name) | list | length > 0 }}"
+      java_needs_upgrade: "{{ (installed_java_packages | default([]) | length > 0) and (installed_java_packages | default([]) | selectattr('0', 'equalto', java_package_name) | list | length == 0) }}"
+
+  - name: Display Java installation status
+    debug:
+      msg: >-
+        {% if java_already_installed %}
+        Java {{ java_version | default('21') }} already installed
+        {% elif java_needs_upgrade %}
+        Java upgrade needed - will uninstall existing package(s) first
+        {% else %}
+        Java not found - will install
+        {% endif %}
+
+  - name: Uninstall old Java packages for upgrade
+    win_chocolatey:
+      name: "{{ item[0] }}"
+      state: absent
+    loop: "{{ installed_java_packages | default([]) }}"
+    when:
+      - java_needs_upgrade
+      - item[0] != java_package_name
+
+  - name: Install "{{ java_package_name }}"
     win_chocolatey:
       name:
-      - "Microsoft-openjdk-{{ java_version | default('21') }}"
-      state: present
-      # install_args: "INSTALLDIR='{{ java_install_dir | default('c:\\java') }}'"
+      - "{{ java_package_name }}"
+      state: latest
       choco_args: '-f -y'
       install_args: "INSTALLDIR={{ java_install_dir | default('c:\\java') }}"
+    when: not java_already_installed or java_needs_upgrade
 
   - name: Set JAVA_HOME environment variable
     win_environment:
@@ -30,16 +75,37 @@
       elements:
         - "{{ java_home }}/bin"
 
+  - name: Query final installed Java packages
+    ansible.windows.win_shell: |
+      choco list --local-only --exact --all-versions Microsoft-openjdk-* -r
+    register: choco_final_packages
+    changed_when: false
+    failed_when: false
+
+  - name: Display final installed Java packages
+    debug:
+      msg: "Installed Java packages after installation: {{ choco_final_packages.stdout_lines }}"
+
   - name: Verify Java installation
     win_command: "{{ java_home | default('c:/java') }}/bin/java.exe -version"
     register: java_version_output
     changed_when: false
+
+  - name: Parse installed Java version
+    set_fact:
+      installed_java_version: "{{ java_version_output.stderr | regex_search('openjdk version \"([0-9.]+)\"', '\\1') | first | default('unknown') }}"
+    when: java_version_output.rc == 0
+
+  - name: Display Java version information
+    debug:
+      msg: "Java {{ java_version | default('21') }} verification - Executable version: {{ installed_java_version | default('unknown') }}"
 
   - name: Assert Java is installed correctly
     assert:
       that:
         - java_version_output.rc == 0
         - "'openjdk version' in java_version_output.stderr or 'openjdk version' in java_version_output.stdout"
-      fail_msg: "Java installation verification failed"
+        - java_package_name in choco_final_packages.stdout
+      fail_msg: "Java installation verification failed - expected {{ java_package_name }}"
       success_msg: "Java {{ java_version | default('21') }} installed successfully at {{ java_home }}"
   become: no
