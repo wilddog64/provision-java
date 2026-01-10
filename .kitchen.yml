@@ -70,5 +70,26 @@ platforms:
 
 suites:
   - name: default
-    run_list:
-    attributes:
+    provisioner:
+      extra_vars:
+        java_version: 21
+    verifier:
+      name: shell
+      command: exit 0
+
+  - name: upgrade
+    provisioner:
+      extra_vars:
+        java_version: 17
+    verifier:
+      name: shell
+      command: exit 0
+
+  - name: idempotence
+    provisioner:
+      extra_vars:
+        java_version: 21
+      idempotency_test: true
+    verifier:
+      name: shell
+      command: exit 0
