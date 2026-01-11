@@ -5,3 +5,8 @@ oracle_jce_url: http://download.oracle.com/otn-pub/java/jce/{{ oracle_java_versi
 oracle_jce7_url: http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip
 require_oracle_java: yes
 require_jce: yes
+
+# Windows Java installation settings
+java_install_base_dir: 'C:/java'  # Base installation directory
+java_symlink_name: 'current'      # Symlink name pointing to active Java version
+java_keep_versions: 10            # Number of old Java versions to keep (0 = keep all)
