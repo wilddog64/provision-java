@@ -4,6 +4,7 @@
   gather_facts: no
   vars:
     jdk_version: 21
+    java_install_dir: c:/java
 
   # include_role:
   #   - name: windows-base
