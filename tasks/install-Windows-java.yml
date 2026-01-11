@@ -50,24 +50,101 @@
       - java_needs_upgrade
       - item[0] != java_package_name
 
+  - name: Get Java package version for directory name
+    ansible.windows.win_shell: |
+      choco list --local-only --exact {{ java_package_name }} -r | Select-String -Pattern "{{ java_package_name }}\|" | ForEach-Object { $_.Line.Split('|')[1] }
+    register: choco_java_version_query
+    changed_when: false
+    failed_when: false
+    when: not java_already_installed or java_needs_upgrade
+
+  - name: Set Java versioned directory path
+    set_fact:
+      java_version_for_install: "{{ choco_java_version_query.stdout | trim if (choco_java_version_query.stdout is defined and choco_java_version_query.stdout | length > 0) else (java_version | default('21')) }}"
+      java_versioned_dir: "{{ java_install_base_dir }}/jdk-{{ java_version | default('21') }}"
+      java_home: "{{ java_install_base_dir }}/{{ java_symlink_name }}"
+
+  - name: Check if symlink exists
+    ansible.windows.win_stat:
+      path: "{{ java_home }}"
+    register: java_symlink_stat
+
+  - name: Remove old symlink for upgrade
+    ansible.windows.win_file:
+      path: "{{ java_home }}"
+      state: absent
+    when: java_symlink_stat.stat.exists and java_needs_upgrade
+
   - name: Install "{{ java_package_name }}"
     win_chocolatey:
       name:
       - "{{ java_package_name }}"
       state: latest
       choco_args: '-f -y'
-      install_args: "INSTALLDIR={{ java_install_dir | default('c:\\java') }}"
+      install_args: "INSTALLDIR={{ java_versioned_dir }}"
     when: not java_already_installed or java_needs_upgrade
+    register: java_install_result
+
+  - name: Create symlink to current Java version
+    ansible.windows.win_command: 'cmd /c mklink /D "{{ java_home }}" "{{ java_versioned_dir }}"'
+    when: not java_already_installed or java_needs_upgrade or not java_symlink_stat.stat.exists
+    register: java_symlink_result
+    failed_when: java_symlink_result.rc != 0 and 'already exists' not in java_symlink_result.stderr
+
+  - name: Display symlink creation result
+    debug:
+      msg: "Java symlink created: {{ java_home }} -> {{ java_versioned_dir }}"
+    when: java_symlink_result is changed
+
+  - name: Find all Java version directories for cleanup
+    ansible.windows.win_find:
+      paths: "{{ java_install_base_dir }}"
+      patterns: "jdk-*"
+      file_type: directory
+    register: all_java_dirs
+    when: java_keep_versions | int > 0
+
+  - name: Sort Java directories by modification time (newest first)
+    set_fact:
+      sorted_java_dirs: "{{ all_java_dirs.files | sort(attribute='lastwritetime') | reverse | list }}"
+    when:
+      - java_keep_versions | int > 0
+      - all_java_dirs.files is defined
+      - all_java_dirs.files | length > 0
+
+  - name: Identify old Java versions to remove
+    set_fact:
+      java_dirs_to_remove: "{{ sorted_java_dirs[java_keep_versions | int:] }}"
+    when:
+      - java_keep_versions | int > 0
+      - sorted_java_dirs is defined
+      - sorted_java_dirs | length > (java_keep_versions | int)
+
+  - name: Display Java versions to be removed
+    debug:
+      msg: "Removing old Java version: {{ item.path }}"
+    loop: "{{ java_dirs_to_remove | default([]) }}"
+    when: java_dirs_to_remove is defined
+
+  - name: Remove old Java versions beyond retention policy
+    ansible.windows.win_file:
+      path: "{{ item.path }}"
+      state: absent
+    loop: "{{ java_dirs_to_remove | default([]) }}"
+    when:
+      - java_keep_versions | int > 0
+      - java_dirs_to_remove is defined
+      - java_dirs_to_remove | length > 0
 
   - name: Set JAVA_HOME environment variable
     win_environment:
       name: JAVA_HOME
-      value: "{{ java_install_dir | default('c:\\java') }}"
+      value: "{{ java_home }}"
       level: machine
 
   - name: Set java_home fact
     set_fact:
-      java_home: "{{ java_install_dir | default('c:\\java') }}"
+      java_home: "{{ java_home }}"
 
 
   - name: Add Java to PATH
