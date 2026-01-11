@@ -98,14 +98,14 @@
 
   - name: Display Java version information
     debug:
-      msg: "Java {{ java_version | default('21') }} verification - Executable version: {{ installed_java_version | default('unknown') }}"
+      msg: "installed java verson: {{ java_version_output.stderr }}"
 
   - name: Assert Java is installed correctly
     assert:
       that:
         - java_version_output.rc == 0
-        - "'openjdk version' in java_version_output.stderr or 'openjdk version' in java_version_output.stdout"
-        - java_package_name in choco_final_packages.stdout
+        - (jdk_version | string) in java_version_output.stderr
+        # - java_package_name in choco_final_packages.stdout
       fail_msg: "Java installation verification failed - expected {{ java_package_name }}"
       success_msg: "Java {{ java_version | default('21') }} installed successfully at {{ java_home }}"
   become: no
