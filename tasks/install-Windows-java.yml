@@ -1,93 +1,116 @@
 ---
 - block:
-  - name: Install Chocolatey package
-    win_chocolatey:
-      name: chocolatey
-      state: present
-
-  - name: Set target Java package name
+  - name: Set Java paths and download URL
     set_fact:
-      java_package_name: "Microsoft-openjdk-{{ java_version | default('21') }}"
-
-  - name: Query for existing Microsoft OpenJDK packages
-    ansible.windows.win_shell: |
-      choco list --local-only --exact --all-versions Microsoft-openjdk-* -r
-    register: choco_java_packages
-    changed_when: false
-    failed_when: false
-
-  - name: Parse installed Java packages
-    set_fact:
-      installed_java_packages: "{{ choco_java_packages.stdout_lines | map('split', '|') | list }}"
-    when: choco_java_packages.stdout_lines | length > 0
-
-  - name: Display installed Java packages
-    debug:
-      msg: "Found installed Java packages: {{ installed_java_packages | default([]) }}"
+      java_home: "{{ java_install_base_dir }}/{{ java_symlink_name }}"
+      java_versioned_dir: "{{ java_install_base_dir }}/jdk-{{ jdk_version }}"
+      java_download_url: "https://aka.ms/download-jdk/microsoft-jdk-{{ jdk_version }}-windows-x64.zip"
 
   - name: Check if target version is already installed
-    set_fact:
-      java_already_installed: "{{ installed_java_packages | default([]) | selectattr('0', 'equalto', java_package_name) | list | length > 0 }}"
-      java_needs_upgrade: "{{ (installed_java_packages | default([]) | length > 0) and (installed_java_packages | default([]) | selectattr('0', 'equalto', java_package_name) | list | length == 0) }}"
-
-  - name: Display Java installation status
-    debug:
-      msg: >-
-        {% if java_already_installed %}
-        Java {{ java_version | default('21') }} already installed
-        {% elif java_needs_upgrade %}
-        Java upgrade needed - will uninstall existing package(s) first
-        {% else %}
-        Java not found - will install
-        {% endif %}
-
-  - name: Uninstall old Java packages for upgrade
-    win_chocolatey:
-      name: "{{ item[0] }}"
-      state: absent
-    loop: "{{ installed_java_packages | default([]) }}"
-    when:
-      - java_needs_upgrade
-      - item[0] != java_package_name
-
-  - name: Get Java package version for directory name
-    ansible.windows.win_shell: |
-      choco list --local-only --exact {{ java_package_name }} -r | Select-String -Pattern "{{ java_package_name }}\|" | ForEach-Object { $_.Line.Split('|')[1] }
-    register: choco_java_version_query
-    changed_when: false
-    failed_when: false
-    when: not java_already_installed or java_needs_upgrade
-
-  - name: Set Java versioned directory path
-    set_fact:
-      java_version_for_install: "{{ choco_java_version_query.stdout | trim if (choco_java_version_query.stdout is defined and choco_java_version_query.stdout | length > 0) else (java_version | default('21')) }}"
-      java_versioned_dir: "{{ java_install_base_dir }}/jdk-{{ java_version | default('21') }}"
-      java_home: "{{ java_install_base_dir }}/{{ java_symlink_name }}"
+    ansible.windows.win_stat:
+      path: "{{ java_versioned_dir }}/bin/java.exe"
+    register: java_target_installed
 
   - name: Check if symlink exists
     ansible.windows.win_stat:
       path: "{{ java_home }}"
     register: java_symlink_stat
 
+  - name: Find any existing Java installations
+    ansible.windows.win_find:
+      paths: "{{ java_install_base_dir }}"
+      patterns: "jdk-*"
+      file_type: directory
+    register: existing_java_dirs
+
+  - name: Set facts about existing installations
+    set_fact:
+      java_already_installed: "{{ (existing_java_dirs.files | length) > 0 }}"
+      java_needs_upgrade: "{{ (existing_java_dirs.files | length) > 0 and not java_target_installed.stat.exists }}"
+      existing_java_path: "{{ existing_java_dirs.files[0].path if (existing_java_dirs.files | length) > 0 else '' }}"
+
+  - name: Display Java installation status
+    debug:
+      msg: >-
+        {% if java_target_installed.stat.exists %}
+        Java {{ jdk_version }} already installed at {{ java_home }}
+        {% elif java_needs_upgrade %}
+        Java upgrade needed - existing installation found at {{ existing_java_path }}
+        {% else %}
+        Java not found - will install
+        {% endif %}
+
   - name: Remove old symlink for upgrade
     ansible.windows.win_file:
       path: "{{ java_home }}"
       state: absent
-    when: java_symlink_stat.stat.exists and java_needs_upgrade
+    when: java_symlink_stat.stat.exists and (java_needs_upgrade or not java_target_installed.stat.exists)
 
-  - name: Install "{{ java_package_name }}"
-    win_chocolatey:
-      name:
-      - "{{ java_package_name }}"
-      state: latest
-      choco_args: '-f -y'
-      install_args: "INSTALLDIR={{ java_versioned_dir }}"
-    when: not java_already_installed or java_needs_upgrade
-    register: java_install_result
+  - name: Ensure temp directory exists
+    ansible.windows.win_file:
+      path: "{{ java_temp_dir }}"
+      state: directory
+    when: not java_target_installed.stat.exists
+
+  - name: Download Java ZIP
+    ansible.windows.win_get_url:
+      url: "{{ java_download_url }}"
+      dest: "{{ java_temp_dir }}/microsoft-jdk-{{ jdk_version }}.zip"
+    register: java_download
+    when: not java_target_installed.stat.exists
+
+  - name: Ensure Java install directory exists
+    ansible.windows.win_file:
+      path: "{{ java_install_base_dir }}"
+      state: directory
+    when: not java_target_installed.stat.exists
+
+  - name: Extract Java archive
+    community.windows.win_unzip:
+      src: "{{ java_temp_dir }}/microsoft-jdk-{{ jdk_version }}.zip"
+      dest: "{{ java_install_base_dir }}"
+    when: not java_target_installed.stat.exists
+    register: java_extract
+
+  - name: Find extracted Java directory
+    ansible.windows.win_find:
+      paths: "{{ java_install_base_dir }}"
+      patterns: "jdk-*"
+      file_type: directory
+    register: extracted_java_dir
+    when: not java_target_installed.stat.exists
+
+  - name: Display extracted directory
+    debug:
+      msg: "Found extracted directory: {{ extracted_java_dir.files[0].path if extracted_java_dir.files | length > 0 else 'none' }}"
+    when: not java_target_installed.stat.exists
+
+  - name: Rename extracted directory to target name
+    ansible.windows.win_command: 'cmd /c move "{{ extracted_java_dir.files[0].path }}" "{{ java_versioned_dir }}"'
+    when:
+      - not java_target_installed.stat.exists
+      - extracted_java_dir.files | length > 0
+      - extracted_java_dir.files[0].path != java_versioned_dir
+    register: java_rename_result
+    failed_when: java_rename_result.rc != 0 and 'already exists' not in java_rename_result.stderr
+
+  - name: Verify Java files were extracted
+    ansible.windows.win_stat:
+      path: "{{ java_versioned_dir }}/bin/java.exe"
+    register: java_files_check
+    when: not java_target_installed.stat.exists
+
+  - name: Assert Java files exist after extraction
+    assert:
+      that:
+        - java_files_check.stat.exists
+      fail_msg: "Java files not found after extraction at {{ java_versioned_dir }}"
+      success_msg: "Java files verified at {{ java_versioned_dir }}"
+    when: not java_target_installed.stat.exists
 
   - name: Create symlink to current Java version
     ansible.windows.win_command: 'cmd /c mklink /D "{{ java_home }}" "{{ java_versioned_dir }}"'
-    when: not java_already_installed or java_needs_upgrade or not java_symlink_stat.stat.exists
+    when: not java_target_installed.stat.exists or java_needs_upgrade
     register: java_symlink_result
     failed_when: java_symlink_result.rc != 0 and 'already exists' not in java_symlink_result.stderr
 
@@ -146,25 +169,13 @@
     set_fact:
       java_home: "{{ java_home }}"
 
-
   - name: Add Java to PATH
     win_path:
       elements:
         - "{{ java_home }}/bin"
 
-  - name: Query final installed Java packages
-    ansible.windows.win_shell: |
-      choco list --local-only --exact --all-versions Microsoft-openjdk-* -r
-    register: choco_final_packages
-    changed_when: false
-    failed_when: false
-
-  - name: Display final installed Java packages
-    debug:
-      msg: "Installed Java packages after installation: {{ choco_final_packages.stdout_lines }}"
-
   - name: Verify Java installation
-    win_command: "{{ java_home | default('c:/java') }}/bin/java.exe -version"
+    win_command: "{{ java_home }}/bin/java.exe -version"
     register: java_version_output
     changed_when: false
 
@@ -175,14 +186,20 @@
 
   - name: Display Java version information
     debug:
-      msg: "installed java verson: {{ java_version_output.stderr }}"
+      msg: "Installed Java version: {{ java_version_output.stderr }}"
 
   - name: Assert Java is installed correctly
     assert:
       that:
         - java_version_output.rc == 0
         - (jdk_version | string) in java_version_output.stderr
-        # - java_package_name in choco_final_packages.stdout
-      fail_msg: "Java installation verification failed - expected {{ java_package_name }}"
-      success_msg: "Java {{ java_version | default('21') }} installed successfully at {{ java_home }}"
+      fail_msg: "Java installation verification failed - expected version {{ jdk_version }}"
+      success_msg: "Java {{ jdk_version }} installed successfully at {{ java_home }}"
+
+  - name: Clean up downloaded zip
+    ansible.windows.win_file:
+      path: "{{ java_temp_dir }}/microsoft-jdk-{{ jdk_version }}.zip"
+      state: absent
+    when: java_download.changed | default(false)
+
   become: no
