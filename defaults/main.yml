@@ -10,3 +10,4 @@ require_jce: yes
 java_install_base_dir: 'C:/java'  # Base installation directory
 java_symlink_name: 'current'      # Symlink name pointing to active Java version
 java_keep_versions: 10            # Number of old Java versions to keep (0 = keep all)
+java_temp_dir: 'C:/temp'          # Temporary directory for downloads
