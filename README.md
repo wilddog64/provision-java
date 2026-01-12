@@ -28,7 +28,6 @@ The block executes only when `ansible_facts.os_family == 'Windows'` (set in `tas
 - hosts: windows
   gather_facts: yes
   roles:
-    - windows-base      # ensures Chocolatey + PATH
     - provision-tomcat
 ```
 

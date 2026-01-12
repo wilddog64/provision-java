@@ -10,5 +10,4 @@
   #   - name: windows-base
 
   roles:
-    - windows-base
     - provision-java
