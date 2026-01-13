@@ -72,25 +72,37 @@
     when: not java_target_installed.stat.exists
     register: java_extract
 
-  - name: Find extracted Java directory
+  - name: Find extracted Java directories
     ansible.windows.win_find:
       paths: "{{ java_install_base_dir }}"
-      patterns: "jdk-*"
+      patterns: "jdk-{{ jdk_version | string }}*"
       file_type: directory
-    register: extracted_java_dir
+    register: extracted_java_dirs
     when: not java_target_installed.stat.exists
+
+  - name: Determine extracted directory path
+    set_fact:
+      extracted_java_dir_path: >-
+        {{ (extracted_java_dirs.files
+            | rejectattr('path', 'equalto', java_versioned_dir)
+            | sort(attribute='lastwritetime')
+            | last).path | default('') }}
+    when:
+      - not java_target_installed.stat.exists
+      - extracted_java_dirs.files is defined
+      - extracted_java_dirs.files | length > 0
 
   - name: Display extracted directory
     debug:
-      msg: "Found extracted directory: {{ extracted_java_dir.files[0].path if extracted_java_dir.files | length > 0 else 'none' }}"
+      msg: "Found extracted directory: {{ extracted_java_dir_path | default('none') }}"
     when: not java_target_installed.stat.exists
 
   - name: Rename extracted directory to target name
-    ansible.windows.win_command: 'cmd /c move "{{ extracted_java_dir.files[0].path }}" "{{ java_versioned_dir }}"'
+    ansible.windows.win_command: 'cmd /c move "{{ extracted_java_dir_path }}" "{{ java_versioned_dir }}"'
     when:
       - not java_target_installed.stat.exists
-      - extracted_java_dir.files | length > 0
-      - extracted_java_dir.files[0].path != java_versioned_dir
+      - extracted_java_dir_path | default('') | length > 0
+      - extracted_java_dir_path != java_versioned_dir
     register: java_rename_result
     failed_when: java_rename_result.rc != 0 and 'already exists' not in java_rename_result.stderr
 
