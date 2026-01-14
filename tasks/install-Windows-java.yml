@@ -71,26 +71,26 @@
     ansible.windows.win_file:
       path: "{{ java_temp_dir }}"
       state: directory
-    when: not java_target_installed.stat.exists
+    when: not java_target_installed.stat.exists or java_needs_upgrade
 
   - name: Download Java ZIP
     ansible.windows.win_get_url:
       url: "{{ java_download_url }}"
       dest: "{{ java_temp_dir }}/microsoft-jdk-{{ jdk_version }}.zip"
     register: java_download
-    when: not java_target_installed.stat.exists
+    when: not java_target_installed.stat.exists or java_needs_upgrade
 
   - name: Ensure Java install directory exists
     ansible.windows.win_file:
       path: "{{ java_install_base_dir }}"
       state: directory
-    when: not java_target_installed.stat.exists
+    when: not java_target_installed.stat.exists or java_needs_upgrade
 
   - name: Extract Java archive
     community.windows.win_unzip:
       src: "{{ java_temp_dir }}/microsoft-jdk-{{ jdk_version }}.zip"
       dest: "{{ java_install_base_dir }}"
-    when: not java_target_installed.stat.exists
+    when: not java_target_installed.stat.exists or java_needs_upgrade
     register: java_extract
 
   - name: Find extracted Java directories
@@ -99,7 +99,7 @@
       patterns: "jdk-{{ jdk_version | string }}*"
       file_type: directory
     register: extracted_java_dirs
-    when: not java_target_installed.stat.exists
+    when: not java_target_installed.stat.exists or java_needs_upgrade
 
   - name: Determine extracted directory path
     set_fact:
@@ -116,7 +116,7 @@
   - name: Display extracted directory
     debug:
       msg: "Found extracted directory: {{ extracted_java_dir_path | default('none') }}"
-    when: not java_target_installed.stat.exists
+    when: not java_target_installed.stat.exists or java_needs_upgrade
 
   - name: Rename extracted directory to target name
     ansible.windows.win_command: 'cmd /c move "{{ extracted_java_dir_path }}" "{{ java_versioned_dir }}"'
