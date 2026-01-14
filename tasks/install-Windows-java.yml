@@ -65,7 +65,7 @@
     ansible.windows.win_file:
       path: "{{ java_home }}"
       state: absent
-    when: java_symlink_stat.stat.exists and (java_needs_upgrade or not java_target_installed.stat.exists)
+    when: java_symlink_stat.stat.exists and (java_needs_upgrade or not java_target_installed.stat.exists or java_symlink_needs_update | bool)
 
   - name: Ensure temp directory exists
     ansible.windows.win_file:
