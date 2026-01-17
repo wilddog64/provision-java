@@ -12,6 +12,12 @@ provisioner:
   roles_path: ..
   ansible_version: latest
   host_key_checking: false
+  ignore_paths:
+    - .direnv
+    - .git
+    - .kitchen
+    - .vagrant
+    - .claude
   # vault_password_file: ./secrets/my_pass.txt
   idempotency_test: false
   chef_bootstrap_url: null
