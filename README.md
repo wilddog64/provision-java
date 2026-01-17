@@ -85,6 +85,41 @@ This Ansible role installs OpenJDK on Linux (Debian/Ubuntu and RedHat/Rocky/Cent
         jdk_version: 17  # Switch default to JDK 17
 ```
 
+## Command Line Usage
+
+### Run with ansible-playbook
+
+```bash
+# Install JDK 21 (default)
+ansible-playbook -i inventory playbook.yml
+
+# Install multiple versions with JDK 17 as active
+ansible-playbook -i inventory playbook.yml \
+  -e '{"jdk_versions": [17, 21], "jdk_version": 17}'
+
+# Switch active version (assumes versions already installed)
+ansible-playbook -i inventory playbook.yml \
+  -e 'jdk_version=21'
+```
+
+### Run on localhost
+
+```bash
+ansible-playbook -i localhost, -c local playbook.yml \
+  -e '{"jdk_versions": [17, 21], "jdk_version": 21}' \
+  --become
+```
+
+### Example inventory file
+
+```ini
+[linux]
+192.168.1.100 ansible_user=ubuntu ansible_become=yes
+
+[redhat]
+192.168.1.101 ansible_user=rocky ansible_become=yes
+```
+
 ## Local Testing
 
 This role supports both Vagrant and Test Kitchen for local testing.
