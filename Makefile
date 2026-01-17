@@ -18,7 +18,31 @@ endif
 PLATFORMS := win11 ubuntu-2404 rockylinux9
 SUITES := default multi upgrade idempotence
 
+# Maximum allowed size for kitchen file transfer (in MB)
+MAX_TRANSFER_SIZE_MB := 50
+
 .DEFAULT_GOAL := help
+
+# Preflight check: ensure transfer size is reasonable
+.PHONY: preflight
+preflight:
+	@total_kb=$$(du -sk . 2>/dev/null | cut -f1); \
+	exclude_kb=0; \
+	for dir in .git .direnv .kitchen .vagrant .claude; do \
+		if [ -d "$$dir" ]; then \
+			dir_kb=$$(du -sk "$$dir" 2>/dev/null | cut -f1); \
+			exclude_kb=$$((exclude_kb + dir_kb)); \
+		fi; \
+	done; \
+	size_kb=$$((total_kb - exclude_kb)); \
+	size_mb=$$((size_kb / 1024)); \
+	echo "Transfer size: $${size_mb}MB (max: $(MAX_TRANSFER_SIZE_MB)MB)"; \
+	if [ $$size_mb -gt $(MAX_TRANSFER_SIZE_MB) ]; then \
+		echo "ERROR: Transfer size exceeds $(MAX_TRANSFER_SIZE_MB)MB limit!"; \
+		echo "Check for large files/directories that should be in ignore_paths:"; \
+		du -sh * .* 2>/dev/null | sort -h | tail -10; \
+		exit 1; \
+	fi
 
 .PHONY: help
 help:
@@ -27,6 +51,7 @@ help:
 	@echo "Utility:"
 	@echo "  list-kitchen-instances  # List all kitchen instances"
 	@echo "  destroy-all             # Destroy all kitchen instances"
+	@echo "  preflight               # Check transfer size before test/converge"
 	@echo ""
 	@echo "Quick test (default suite):"
 	@$(foreach p,$(PLATFORMS),echo "  test-$(p)           # kitchen test default-$(p)" &&) true
@@ -58,18 +83,18 @@ destroy-all:
 # Test all suites on a platform
 define TEST_ALL_SUITES
 .PHONY: test-all-$(1)
-test-all-$(1):
+test-all-$(1): preflight
 	@$(foreach s,$(SUITES),echo "=== Testing suite: $(s)-$(1) ===" && KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) test $(s)-$(1) &&) true
 endef
 
 # Test specific suite on platform
 define KITCHEN_SUITE_PLATFORM_TARGETS
 .PHONY: test-$(1)-$(2)
-test-$(1)-$(2):
+test-$(1)-$(2): preflight
 	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) test $(1)-$(2)
 
 .PHONY: converge-$(1)-$(2)
-converge-$(1)-$(2):
+converge-$(1)-$(2): preflight
 	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) converge $(1)-$(2)
 
 .PHONY: verify-$(1)-$(2)
@@ -84,11 +109,11 @@ endef
 # Platform-level targets (shortcuts for default suite)
 define KITCHEN_PLATFORM_TARGETS
 .PHONY: test-$(1)
-test-$(1):
+test-$(1): preflight
 	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) test default-$(1)
 
 .PHONY: converge-$(1)
-converge-$(1):
+converge-$(1): preflight
 	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) converge default-$(1)
 
 .PHONY: verify-$(1)

@@ -9,7 +9,6 @@ provisioner:
   hosts: test-kitchen
   require_ansible_repo: true
   playbook: tests/playbook.yml
-  roles_path: ..
   ansible_version: latest
   host_key_checking: false
   ignore_paths:
@@ -53,7 +52,6 @@ platforms:
       hosts: test-kitchen
       require_ansible_repo: true
       playbook: tests/playbook.yml
-      roles_path: ..
       ansible_version: latest
       ansible_host_key_checking: false
       idempotency_test: false
