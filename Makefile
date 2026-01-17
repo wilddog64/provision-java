@@ -70,13 +70,23 @@ help:
 	@echo "Destroy specific suite on platform:"
 	@$(foreach p,$(PLATFORMS),$(foreach s,$(SUITES),echo "  destroy-$(s)-$(p)" &&)) true
 	@echo ""
-	@echo "Vagrant targets:"
+	@echo "Vagrant targets (default: Rocky Linux 9):"
 	@echo "  vagrant-up              # Start VM"
 	@echo "  vagrant-provision       # Run ansible (default: JDK 17,21, active: 21)"
 	@echo "  vagrant-destroy         # Destroy VM"
 	@echo "  vagrant-ssh             # SSH into VM"
 	@echo "  vagrant-multi           # Provision with custom versions"
 	@echo "                          # e.g., make vagrant-multi JDK_VERSIONS=11,17,21 JDK_VERSION=17"
+	@echo ""
+	@echo "Vagrant with specific distro:"
+	@echo "  vagrant-ubuntu-up       # Start Ubuntu 24.04 VM"
+	@echo "  vagrant-ubuntu-provision"
+	@echo "  vagrant-ubuntu-destroy"
+	@echo "  vagrant-ubuntu-ssh"
+	@echo "  vagrant-rocky-up        # Start Rocky Linux 9 VM"
+	@echo "  vagrant-rocky-provision"
+	@echo "  vagrant-rocky-destroy"
+	@echo "  vagrant-rocky-ssh"
 	@echo ""
 	@echo "Override KITCHEN_YAML=/path/to/.kitchen.yml when needed."
 
@@ -137,7 +147,7 @@ $(foreach platform,$(PLATFORMS),$(eval $(call TEST_ALL_SUITES,$(platform))))
 $(foreach platform,$(PLATFORMS),$(eval $(call KITCHEN_PLATFORM_TARGETS,$(platform))))
 $(foreach platform,$(PLATFORMS),$(foreach suite,$(SUITES),$(eval $(call KITCHEN_SUITE_PLATFORM_TARGETS,$(suite),$(platform)))))
 
-# Vagrant targets
+# Vagrant targets (default: Rocky Linux 9)
 .PHONY: vagrant-up vagrant-provision vagrant-destroy vagrant-ssh vagrant-status
 
 vagrant-up:
@@ -160,3 +170,33 @@ vagrant-status:
 .PHONY: vagrant-multi
 vagrant-multi:
 	JDK_VERSIONS=$(JDK_VERSIONS) JDK_VERSION=$(JDK_VERSION) vagrant provision
+
+# Vagrant with Ubuntu
+.PHONY: vagrant-ubuntu-up vagrant-ubuntu-provision vagrant-ubuntu-destroy vagrant-ubuntu-ssh
+
+vagrant-ubuntu-up:
+	./bin/vagrant-ubuntu up
+
+vagrant-ubuntu-provision:
+	./bin/vagrant-ubuntu provision
+
+vagrant-ubuntu-destroy:
+	./bin/vagrant-ubuntu destroy -f
+
+vagrant-ubuntu-ssh:
+	./bin/vagrant-ubuntu ssh
+
+# Vagrant with Rocky Linux
+.PHONY: vagrant-rocky-up vagrant-rocky-provision vagrant-rocky-destroy vagrant-rocky-ssh
+
+vagrant-rocky-up:
+	./bin/vagrant-rocky up
+
+vagrant-rocky-provision:
+	./bin/vagrant-rocky provision
+
+vagrant-rocky-destroy:
+	./bin/vagrant-rocky destroy -f
+
+vagrant-rocky-ssh:
+	./bin/vagrant-rocky ssh

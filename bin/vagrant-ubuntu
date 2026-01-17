@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Start Vagrant with Ubuntu 24.04
+set -euo pipefail
+
+export VAGRANT_BOX="bento/ubuntu-24.04"
+export VAGRANT_BOX_NAME="ubuntu"
+
+exec vagrant "$@"
