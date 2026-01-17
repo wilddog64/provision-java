@@ -26,6 +26,7 @@ help:
 	@echo ""
 	@echo "Utility:"
 	@echo "  list-kitchen-instances  # List all kitchen instances"
+	@echo "  destroy-all             # Destroy all kitchen instances"
 	@echo ""
 	@echo "Quick test (default suite):"
 	@$(foreach p,$(PLATFORMS),echo "  test-$(p)           # kitchen test default-$(p)" &&) true
@@ -41,11 +42,18 @@ help:
 	@$(foreach p,$(PLATFORMS),echo "  verify-$(p)         # kitchen verify default-$(p)" &&) true
 	@$(foreach p,$(PLATFORMS),echo "  destroy-$(p)        # kitchen destroy all $(p) instances" &&) true
 	@echo ""
+	@echo "Destroy specific suite on platform:"
+	@$(foreach p,$(PLATFORMS),$(foreach s,$(SUITES),echo "  destroy-$(s)-$(p)" &&)) true
+	@echo ""
 	@echo "Override KITCHEN_YAML=/path/to/.kitchen.yml when needed."
 
 .PHONY: list-kitchen-instances
 list-kitchen-instances:
 	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) list
+
+.PHONY: destroy-all
+destroy-all:
+	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) destroy
 
 # Test all suites on a platform
 define TEST_ALL_SUITES
@@ -67,6 +75,10 @@ converge-$(1)-$(2):
 .PHONY: verify-$(1)-$(2)
 verify-$(1)-$(2):
 	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) verify $(1)-$(2)
+
+.PHONY: destroy-$(1)-$(2)
+destroy-$(1)-$(2):
+	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) destroy $(1)-$(2)
 endef
 
 # Platform-level targets (shortcuts for default suite)
