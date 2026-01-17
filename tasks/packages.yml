@@ -1,8 +1,7 @@
 ---
 - name: install required packages
-  package:
+  ansible.builtin.package:
     name:
       - curl
       - unzip
-      - gpg
     state: present

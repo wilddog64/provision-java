@@ -1,0 +1,109 @@
+---
+# tasks file for ansible-java - Linux OpenJDK installation with multiple version support
+
+- name: Build list of all JDK versions to install
+  ansible.builtin.set_fact:
+    all_jdk_versions: "{{ (jdk_versions + [jdk_version]) | unique | sort }}"
+
+- name: Display JDK versions to install
+  ansible.builtin.debug:
+    msg: "Installing JDK versions: {{ all_jdk_versions }}, default: {{ jdk_version }}"
+
+- name: Build list of JDK packages to install
+  ansible.builtin.set_fact:
+    jdk_packages: "{{ all_jdk_versions | map('regex_replace', '^(.*)$', java_package_prefix ~ '\\1' ~ java_package_suffix) | list }}"
+
+- name: Display JDK packages to install
+  ansible.builtin.debug:
+    msg: "Packages to install: {{ jdk_packages }}"
+
+- name: Install OpenJDK packages
+  ansible.builtin.package:
+    name: "{{ jdk_packages }}"
+    state: present
+
+- name: Set Java alternatives (Debian)
+  ansible.builtin.shell: |
+    alt_name=$(update-java-alternatives -l | grep "java-1.{{ jdk_version }}" | awk '{print $1}' | head -1)
+    if [ -n "$alt_name" ]; then
+      update-java-alternatives -s "$alt_name" 2>/dev/null || true
+    fi
+  register: update_alternatives_debian
+  changed_when: false
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Set Java alternatives (RedHat)
+  ansible.builtin.shell: |
+    java_path=$(alternatives --display java 2>/dev/null | grep "^/usr/lib/jvm/java-{{ jdk_version }}" | head -1 | awk '{print $1}')
+    if [ -n "$java_path" ]; then
+      alternatives --set java "$java_path"
+    fi
+  register: update_alternatives_redhat_java
+  changed_when: update_alternatives_redhat_java.rc == 0
+  failed_when: false
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Set javac alternatives (RedHat)
+  ansible.builtin.shell: |
+    javac_path=$(alternatives --display javac 2>/dev/null | grep "^/usr/lib/jvm/java-{{ jdk_version }}" | head -1 | awk '{print $1}')
+    if [ -n "$javac_path" ]; then
+      alternatives --set javac "$javac_path"
+    fi
+  register: update_alternatives_redhat_javac
+  changed_when: update_alternatives_redhat_javac.rc == 0
+  failed_when: false
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Get JAVA_HOME from javac
+  ansible.builtin.shell: >
+    dirname "$(dirname "$(readlink -f "$(command -v javac)")")"
+  register: java_home_result
+  changed_when: false
+
+- name: Set JAVA_HOME environment variable
+  ansible.builtin.copy:
+    dest: /etc/profile.d/java.sh
+    mode: '0644'
+    content: |
+      export JAVA_HOME={{ java_home_result.stdout }}
+      export PATH=$JAVA_HOME/bin:$PATH
+  when: java_home_result.stdout | length > 0
+
+- name: Set java_home fact
+  ansible.builtin.set_fact:
+    java_home: "{{ java_home_result.stdout }}"
+
+- name: Verify Java installation
+  ansible.builtin.command: java -version
+  register: java_version_output
+  changed_when: false
+
+- name: Display installed Java version
+  ansible.builtin.debug:
+    msg: "Active Java: {{ java_version_output.stderr }}"
+
+- name: Verify correct Java version is active
+  ansible.builtin.assert:
+    that:
+      - "jdk_version | string in java_version_output.stderr"
+    fail_msg: "Java version mismatch - expected {{ jdk_version }}, got: {{ java_version_output.stderr }}"
+    success_msg: "Java {{ jdk_version }} is active"
+
+- name: List all installed Java alternatives (Debian)
+  ansible.builtin.command: update-java-alternatives -l
+  register: java_alternatives_list
+  changed_when: false
+  failed_when: false
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: List all installed Java alternatives (RedHat)
+  ansible.builtin.command: alternatives --display java
+  register: java_alternatives_list
+  changed_when: false
+  failed_when: false
+  when: ansible_facts['os_family'] == 'RedHat'
+
+- name: Display available Java alternatives
+  ansible.builtin.debug:
+    msg: "Available Java alternatives:\n{{ java_alternatives_list.stdout }}"
+  when: java_alternatives_list.stdout is defined
