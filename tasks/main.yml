@@ -23,7 +23,8 @@
 - include_tasks: "tasks/packages.yml"
   when: ansible_facts['system'] == 'Linux'
 
-- include_tasks: "tasks/query-adoptium-jdk.yml"
+- include_tasks: "tasks/install-Linux-java.yml"
   when: ansible_facts['system'] == 'Linux'
 
-- include_tasks: "tasks/install-{{ ansible_facts['os_family'] }}-java.yml"
+- include_tasks: "tasks/install-Windows-java.yml"
+  when: ansible_facts['os_family'] == 'Windows'

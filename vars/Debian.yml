@@ -1,2 +1,5 @@
 ---
-# vars file for ansible-java
+# vars file for ansible-java (Debian/Ubuntu)
+java_package_name: "openjdk-{{ jdk_version }}-jdk"
+java_package_prefix: "openjdk-"
+java_package_suffix: "-jdk"
