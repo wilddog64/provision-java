@@ -16,7 +16,7 @@ else
 endif
 
 PLATFORMS := win11 ubuntu-2404 rockylinux9
-SUITES := default upgrade idempotence
+SUITES := default multi upgrade idempotence
 
 .DEFAULT_GOAL := help
 
