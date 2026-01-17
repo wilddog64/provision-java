@@ -87,16 +87,56 @@ This Ansible role installs OpenJDK on Linux (Debian/Ubuntu and RedHat/Rocky/Cent
 
 ## Local Testing
 
-This role uses Test Kitchen with Vagrant for testing.
+This role supports both Vagrant and Test Kitchen for local testing.
 
 ### Prerequisites
 
 - Vagrant
 - VirtualBox (or other supported provider)
-- Ruby with Bundler
-- kitchen-ansible gem
+- Ruby with Bundler (for Test Kitchen)
+- kitchen-ansible gem (for Test Kitchen)
 
-### Available Make Targets
+### Vagrant Testing
+
+Quick local testing with Vagrant (Rocky Linux 9):
+
+```bash
+# Start VM with default versions (JDK 17 and 21, with 21 active)
+make vagrant-up
+
+# Re-provision to apply changes
+make vagrant-provision
+
+# SSH into VM to verify
+make vagrant-ssh
+
+# Destroy VM
+make vagrant-destroy
+```
+
+#### Custom JDK Versions
+
+Use environment variables to customize which versions to install:
+
+```bash
+# Install JDK 11, 17, 21 with 17 as active
+JDK_VERSIONS=11,17,21 JDK_VERSION=17 vagrant up
+
+# Or use Makefile target
+make vagrant-multi JDK_VERSIONS=11,17,21 JDK_VERSION=17
+
+# Switch active version without reinstalling
+JDK_VERSION=11 vagrant provision
+```
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `JDK_VERSIONS` | `17,21` | Comma-separated list of versions to install |
+| `JDK_VERSION` | `21` | Version to set as active default |
+
+### Test Kitchen
+
+For comprehensive testing across multiple platforms:
 
 ```bash
 # List all available targets
@@ -132,6 +172,14 @@ make destroy-ubuntu-2404
 | `multi` | Install JDK 17 and 21, set 21 as default |
 | `upgrade` | Install JDK 17 and 21, set 17 as default |
 | `idempotence` | Verify idempotent behavior |
+
+### Preflight Check
+
+A preflight check runs automatically before `test` and `converge` targets to ensure the transfer size is reasonable (< 50MB). Run manually with:
+
+```bash
+make preflight
+```
 
 ## Supported Platforms
 
