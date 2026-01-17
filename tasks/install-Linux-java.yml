@@ -73,21 +73,80 @@
   ansible.builtin.set_fact:
     java_home: "{{ java_home_result.stdout }}"
 
+# Assertions block
+- name: Assert JAVA_HOME is set
+  ansible.builtin.assert:
+    that:
+      - java_home is defined
+      - java_home | length > 0
+    fail_msg: "JAVA_HOME is not set"
+    success_msg: "JAVA_HOME is set to {{ java_home }}"
+
+- name: Check java binary exists
+  ansible.builtin.stat:
+    path: "{{ java_home }}/bin/java"
+  register: java_binary_stat
+
+- name: Assert java binary exists
+  ansible.builtin.assert:
+    that:
+      - java_binary_stat.stat.exists
+      - java_binary_stat.stat.executable
+    fail_msg: "java binary not found or not executable at {{ java_home }}/bin/java"
+    success_msg: "java binary exists at {{ java_home }}/bin/java"
+
+- name: Check javac binary exists
+  ansible.builtin.stat:
+    path: "{{ java_home }}/bin/javac"
+  register: javac_binary_stat
+
+- name: Assert javac binary exists
+  ansible.builtin.assert:
+    that:
+      - javac_binary_stat.stat.exists
+      - javac_binary_stat.stat.executable
+    fail_msg: "javac binary not found or not executable at {{ java_home }}/bin/javac"
+    success_msg: "javac binary exists at {{ java_home }}/bin/javac"
+
 - name: Verify Java installation
   ansible.builtin.command: java -version
   register: java_version_output
+  changed_when: false
+
+- name: Verify javac installation
+  ansible.builtin.command: javac -version
+  register: javac_version_output
   changed_when: false
 
 - name: Display installed Java version
   ansible.builtin.debug:
     msg: "Active Java: {{ java_version_output.stderr }}"
 
-- name: Verify correct Java version is active
+- name: Assert correct Java version is active
   ansible.builtin.assert:
     that:
       - "jdk_version | string in java_version_output.stderr"
     fail_msg: "Java version mismatch - expected {{ jdk_version }}, got: {{ java_version_output.stderr }}"
     success_msg: "Java {{ jdk_version }} is active"
+
+- name: Assert correct javac version is active
+  ansible.builtin.assert:
+    that:
+      - "jdk_version | string in javac_version_output.stdout or jdk_version | string in javac_version_output.stderr"
+    fail_msg: "javac version mismatch - expected {{ jdk_version }}"
+    success_msg: "javac {{ jdk_version }} is active"
+
+- name: Check /etc/profile.d/java.sh exists
+  ansible.builtin.stat:
+    path: /etc/profile.d/java.sh
+  register: java_profile_stat
+
+- name: Assert JAVA_HOME profile script exists
+  ansible.builtin.assert:
+    that:
+      - java_profile_stat.stat.exists
+    fail_msg: "/etc/profile.d/java.sh not found"
+    success_msg: "/etc/profile.d/java.sh exists"
 
 - name: List all installed Java alternatives (Debian)
   ansible.builtin.command: update-java-alternatives -l
