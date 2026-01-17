@@ -27,11 +27,9 @@ Vagrant.configure("2") do |config|
     # ansible.verbose  = 'vv'                 # minimum verbose
     ansible.extra_vars = {
       'ansible_python_interpreter' => '/usr/bin/python3',
-      # 'ansible_connection' => 'winrm',
-      # 'ansible_winrm_transport' => 'basic',
-      # 'ansible_winrm_server_cert_validation' => 'ignore',
-      # # 'ansible_port' => 55986,
-      # 'ansible_winrm_scheme' => 'http',
+      # Install multiple JDK versions, set default via jdk_version
+      'jdk_versions' => ENV.fetch('JDK_VERSIONS', '17,21').split(',').map(&:to_i),
+      'jdk_version' => ENV.fetch('JDK_VERSION', '21').to_i,
     }
   end
   # Disable automatic box update checking. If you disable this, then

@@ -70,6 +70,14 @@ help:
 	@echo "Destroy specific suite on platform:"
 	@$(foreach p,$(PLATFORMS),$(foreach s,$(SUITES),echo "  destroy-$(s)-$(p)" &&)) true
 	@echo ""
+	@echo "Vagrant targets:"
+	@echo "  vagrant-up              # Start VM"
+	@echo "  vagrant-provision       # Run ansible (default: JDK 17,21, active: 21)"
+	@echo "  vagrant-destroy         # Destroy VM"
+	@echo "  vagrant-ssh             # SSH into VM"
+	@echo "  vagrant-multi           # Provision with custom versions"
+	@echo "                          # e.g., make vagrant-multi JDK_VERSIONS=11,17,21 JDK_VERSION=17"
+	@echo ""
 	@echo "Override KITCHEN_YAML=/path/to/.kitchen.yml when needed."
 
 .PHONY: list-kitchen-instances
@@ -128,3 +136,27 @@ endef
 $(foreach platform,$(PLATFORMS),$(eval $(call TEST_ALL_SUITES,$(platform))))
 $(foreach platform,$(PLATFORMS),$(eval $(call KITCHEN_PLATFORM_TARGETS,$(platform))))
 $(foreach platform,$(PLATFORMS),$(foreach suite,$(SUITES),$(eval $(call KITCHEN_SUITE_PLATFORM_TARGETS,$(suite),$(platform)))))
+
+# Vagrant targets
+.PHONY: vagrant-up vagrant-provision vagrant-destroy vagrant-ssh vagrant-status
+
+vagrant-up:
+	vagrant up
+
+vagrant-provision:
+	vagrant provision
+
+vagrant-destroy:
+	vagrant destroy -f
+
+vagrant-ssh:
+	vagrant ssh
+
+vagrant-status:
+	vagrant status
+
+# Vagrant with custom JDK versions
+# Usage: make vagrant-multi JDK_VERSIONS=11,17,21 JDK_VERSION=17
+.PHONY: vagrant-multi
+vagrant-multi:
+	JDK_VERSIONS=$(JDK_VERSIONS) JDK_VERSION=$(JDK_VERSION) vagrant provision
