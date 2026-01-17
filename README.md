@@ -133,7 +133,7 @@ This role supports both Vagrant and Test Kitchen for local testing.
 
 ### Vagrant Testing
 
-Quick local testing with Vagrant (Rocky Linux 9):
+Quick local testing with Vagrant (default: Rocky Linux 9):
 
 ```bash
 # Start VM with default versions (JDK 17 and 21, with 21 active)
@@ -147,6 +147,28 @@ make vagrant-ssh
 
 # Destroy VM
 make vagrant-destroy
+```
+
+#### Test on Different Distros
+
+Use distro-specific targets or scripts:
+
+```bash
+# Ubuntu 24.04
+make vagrant-ubuntu-up
+make vagrant-ubuntu-provision
+make vagrant-ubuntu-ssh
+make vagrant-ubuntu-destroy
+
+# Rocky Linux 9
+make vagrant-rocky-up
+make vagrant-rocky-provision
+make vagrant-rocky-ssh
+make vagrant-rocky-destroy
+
+# Or use scripts directly
+./bin/vagrant-ubuntu up
+./bin/vagrant-rocky up
 ```
 
 #### Custom JDK Versions
