@@ -28,7 +28,7 @@ platforms:
       box: hashicorp-education/ubuntu-24-04
   - name: rockylinux9
     driver_config:
-      box: rockylinux/9
+      box: bento/rockylinux-9
   - name: win11
     driver_config:
       box: stromweld/windows-11
@@ -72,7 +72,18 @@ suites:
   - name: default
     provisioner:
       extra_vars:
-        java_version: 21
+        jdk_version: 21
+    verifier:
+      name: shell
+      command: exit 0
+
+  - name: multi
+    provisioner:
+      extra_vars:
+        jdk_versions:
+          - 17
+          - 21
+        jdk_version: 21
     verifier:
       name: shell
       command: exit 0
@@ -80,7 +91,10 @@ suites:
   - name: upgrade
     provisioner:
       extra_vars:
-        java_version: 17
+        jdk_versions:
+          - 17
+          - 21
+        jdk_version: 17
     verifier:
       name: shell
       command: exit 0
@@ -88,7 +102,7 @@ suites:
   - name: idempotence
     provisioner:
       extra_vars:
-        java_version: 21
+        jdk_version: 21
       idempotency_test: true
     verifier:
       name: shell

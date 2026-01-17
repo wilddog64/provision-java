@@ -12,13 +12,13 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = 'stromweld/windows-11'
+  config.vm.box = 'bento/rockylinux-9'
 
-  config.vm.communicator = "winrm"
-  config.winrm.username = "vagrant"
-  config.winrm.password = "vagrant"
-  config.winrm.transport = :plaintext
-  config.winrm.basic_auth_only = true
+  # config.vm.communicator = "winrm"
+  # config.winrm.username = "vagrant"
+  # config.winrm.password = "vagrant"
+  # config.winrm.transport = :plaintext
+  # config.winrm.basic_auth_only = true
 
   # configure ansible provisioner
   config.vm.provision :ansible do | ansible |
@@ -27,11 +27,11 @@ Vagrant.configure("2") do |config|
     # ansible.verbose  = 'vv'                 # minimum verbose
     ansible.extra_vars = {
       'ansible_python_interpreter' => '/usr/bin/python3',
-      'ansible_connection' => 'winrm',
-      'ansible_winrm_transport' => 'basic',
-      'ansible_winrm_server_cert_validation' => 'ignore',
-      # 'ansible_port' => 55986,
-      'ansible_winrm_scheme' => 'http',
+      # 'ansible_connection' => 'winrm',
+      # 'ansible_winrm_transport' => 'basic',
+      # 'ansible_winrm_server_cert_validation' => 'ignore',
+      # # 'ansible_port' => 55986,
+      # 'ansible_winrm_scheme' => 'http',
     }
   end
   # Disable automatic box update checking. If you disable this, then
