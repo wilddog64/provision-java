@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Start Vagrant with Rocky Linux 9
+set -euo pipefail
+
+export VAGRANT_BOX="bento/rockylinux-9"
+export VAGRANT_BOX_NAME="rocky"
+
+exec vagrant "$@"

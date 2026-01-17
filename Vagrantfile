@@ -12,7 +12,8 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = 'bento/rockylinux-9'
+  # Use VAGRANT_BOX env var to switch distros (see bin/vagrant-ubuntu, bin/vagrant-rocky)
+  config.vm.box = ENV.fetch('VAGRANT_BOX', 'bento/rockylinux-9')
 
   # config.vm.communicator = "winrm"
   # config.winrm.username = "vagrant"
