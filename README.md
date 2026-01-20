@@ -8,6 +8,18 @@ This Ansible role installs OpenJDK on Linux (Debian/Ubuntu and RedHat/Rocky/Cent
 - Linux targets: Debian/Ubuntu or RedHat/Rocky/CentOS with package manager access
 - Windows targets: Windows host accessible over WinRM with administrator rights
 
+## Dependencies
+
+Install required Ansible collections (installs to `./collections`):
+
+```bash
+# Use Make (recommended)
+make deps
+
+# Or manually
+ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections
+```
+
 ## Role Variables
 
 ### Linux & Windows
@@ -123,6 +135,14 @@ ansible-playbook -i localhost, -c local playbook.yml \
 ## Local Testing
 
 This role supports both Vagrant and Test Kitchen for local testing.
+
+### Validation
+
+Run validation checks (linting, syntax):
+
+```bash
+make check
+```
 
 ### Prerequisites
 
