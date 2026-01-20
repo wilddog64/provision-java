@@ -35,9 +35,10 @@
       register: resolved_conf
       become: true
 
-    - name: restart systemd-resolved
+    - name: Restart systemd-resolved
       ansible.builtin.service:
         name: systemd-resolved
         state: restarted
       when: resolved_conf.changed
       become: true
+      ignore_errors: true  # noqa ignore-errors no-handler

@@ -24,6 +24,7 @@
 
 - name: Set Java alternatives (Debian)
   ansible.builtin.shell: |
+    set -o pipefail
     alt_name=$(update-java-alternatives -l | grep "java-1.{{ jdk_version }}" | awk '{print $1}' | head -1)
     if [ -n "$alt_name" ]; then
       update-java-alternatives -s "$alt_name" 2>/dev/null || true
@@ -34,6 +35,7 @@
 
 - name: Set Java alternatives (RedHat)
   ansible.builtin.shell: |
+    set -o pipefail
     java_path=$(alternatives --display java 2>/dev/null | grep "^/usr/lib/jvm/java-{{ jdk_version }}" | head -1 | awk '{print $1}')
     if [ -n "$java_path" ]; then
       alternatives --set java "$java_path"
@@ -45,6 +47,7 @@
 
 - name: Set javac alternatives (RedHat)
   ansible.builtin.shell: |
+    set -o pipefail
     javac_path=$(alternatives --display javac 2>/dev/null | grep "^/usr/lib/jvm/java-{{ jdk_version }}" | head -1 | awk '{print $1}')
     if [ -n "$javac_path" ]; then
       alternatives --set javac "$javac_path"

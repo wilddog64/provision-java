@@ -12,8 +12,8 @@ jdk_version: 21
 oracle_java_version: 8
 oracle_jce_url: http://download.oracle.com/otn-pub/java/jce/{{ oracle_java_version }}/jce_policy-{{ oracle_java_version }}.zip
 oracle_jce7_url: http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip
-require_oracle_java: yes
-require_jce: yes
+require_oracle_java: true
+require_jce: true
 
 # Windows Java installation settings
 java_install_base_dir: 'C:/java'  # Base installation directory

@@ -1,38 +1,42 @@
 ---
 # handlers file for ansible-java
-- name: remove distributed jce files
-  win_file:
+- name: Remove distributed jce files
+  ansible.windows.win_file:
     path: '{{ oracle_java_home }}\jre\lib\security\{{ item }}'
     state: absent
   with_items:
     - local_policy.jar
     - US_export_policy.jar
-  become: no
+  become: false
   listen: win_download_jar
 
-- name: extract jce zip file
-  win_command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
+- name: Extract jce zip file
+  ansible.windows.win_command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
   args:
     creates: "{{ jce_location }}/local_policy.jar"
-  become: no
+  become: false
   listen: win_download_jar
 
-- name: create symlinks to jce files
-  win_shell: cmd /c mklink "{{ oracle_java_home }}\jre\lib\security\{{ item }}" "{{ jce_location }}\{{ item }}"
+- name: Create symlinks to jce files
+  ansible.windows.win_shell: cmd /c mklink "{{ oracle_java_home }}\jre\lib\security\{{ item }}" "{{ jce_location }}\{{ item }}"
   with_items:
     - local_policy.jar
     - US_export_policy.jar
-  become: no
+  become: false
   listen: win_download_jar
 
-- name: extract jce zip file
-  command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
-  args:
+- name: Extract jce zip file (Linux)
+  ansible.builtin.unarchive:
+    src: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+    dest: "{{ jce_location }}"
+    remote_src: true
+    extra_opts:
+      - "-j"
     creates: "{{ jce_location }}/local_policy.jar"
   listen: lnx_download_jar
 
-- name: set jar file permissions
-  file:
+- name: Set jar file permissions
+  ansible.builtin.file:
     path: "{{ jce_location }}/{{ item }}"
     state: file
     mode: "0755"
@@ -41,14 +45,13 @@
     - US_export_policy.jar
   listen: lnx_download_jar
 
-- name: create symlinks to jce files
-  file:
+- name: Create symlinks to jce files (Linux)
+  ansible.builtin.file:
     src: "{{ jce_location }}/{{ item }}"
     dest: "{{ oracle_java_home }}/jre/lib/security/{{ item }}"
-    force: yes
+    force: true
     state: link
   with_items:
     - local_policy.jar
     - US_export_policy.jar
   listen: lnx_download_jar
-
