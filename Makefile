@@ -23,6 +23,34 @@ MAX_TRANSFER_SIZE_MB := 50
 
 .DEFAULT_GOAL := help
 
+# ============================================================================ 
+# Validation Targets
+# ============================================================================ 
+.PHONY: lint
+lint:
+	@echo "Running ansible-lint..."
+	ansible-lint .
+
+.PHONY: syntax
+syntax:
+	@echo "Checking playbook syntax..."
+	ansible-playbook --syntax-check tests/playbook.yml -i tests/inventory
+
+.PHONY: check
+check: lint syntax
+	@echo "All validation checks passed."
+
+# ============================================================================ 
+# Utility Targets
+# ============================================================================ 
+.PHONY: deps
+deps:
+	@echo "Installing Ansible collections..."
+	ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections --force
+
+# ============================================================================ 
+# Preflight
+# ============================================================================ 
 # Preflight check: ensure transfer size is reasonable
 .PHONY: preflight
 preflight:
@@ -46,47 +74,53 @@ preflight:
 
 .PHONY: help
 help:
-	@echo "Available targets (auto KITCHEN_YAML=$(KITCHEN_YAML)):"
+	@echo "Available targets (auto KITCHEN_YAML=$(KITCHEN_YAML)):";
 	@echo ""
-	@echo "Utility:"
-	@echo "  list-kitchen-instances  # List all kitchen instances"
-	@echo "  destroy-all             # Destroy all kitchen instances"
-	@echo "  preflight               # Check transfer size before test/converge"
+	@echo "Validation:";
+	@echo "  lint                # Run ansible-lint";
+	@echo "  syntax              # Check playbook syntax";
+	@echo "  check               # Run all validation checks";
+	@echo "  deps                # Install Ansible collections to ./collections";
 	@echo ""
-	@echo "Quick test (default suite):"
+	@echo "Utility:";
+	@echo "  list-kitchen-instances  # List all kitchen instances";
+	@echo "  destroy-all             # Destroy all kitchen instances";
+	@echo "  preflight               # Check transfer size before test/converge";
+	@echo ""
+	@echo "Quick test (default suite):";
 	@$(foreach p,$(PLATFORMS),echo "  test-$(p)           # kitchen test default-$(p)" &&) true
 	@echo ""
-	@echo "Test specific suite on platform:"
+	@echo "Test specific suite on platform:";
 	@$(foreach p,$(PLATFORMS),$(foreach s,$(SUITES),echo "  test-$(s)-$(p)     # kitchen test $(s)-$(p)" &&)) true
 	@echo ""
-	@echo "Test all suites on a platform:"
+	@echo "Test all suites on a platform:";
 	@$(foreach p,$(PLATFORMS),echo "  test-all-$(p)       # Run all test suites on $(p)" &&) true
 	@echo ""
-	@echo "Converge/Verify/Destroy (default suite):"
+	@echo "Converge/Verify/Destroy (default suite):";
 	@$(foreach p,$(PLATFORMS),echo "  converge-$(p)       # kitchen converge default-$(p)" &&) true
 	@$(foreach p,$(PLATFORMS),echo "  verify-$(p)         # kitchen verify default-$(p)" &&) true
 	@$(foreach p,$(PLATFORMS),echo "  destroy-$(p)        # kitchen destroy all $(p) instances" &&) true
 	@echo ""
-	@echo "Destroy specific suite on platform:"
+	@echo "Destroy specific suite on platform:";
 	@$(foreach p,$(PLATFORMS),$(foreach s,$(SUITES),echo "  destroy-$(s)-$(p)" &&)) true
 	@echo ""
-	@echo "Vagrant targets (default: Rocky Linux 9):"
-	@echo "  vagrant-up              # Start VM"
-	@echo "  vagrant-provision       # Run ansible (default: JDK 17,21, active: 21)"
-	@echo "  vagrant-destroy         # Destroy VM"
-	@echo "  vagrant-ssh             # SSH into VM"
-	@echo "  vagrant-multi           # Provision with custom versions"
-	@echo "                          # e.g., make vagrant-multi JDK_VERSIONS=11,17,21 JDK_VERSION=17"
+	@echo "Vagrant targets (default: Rocky Linux 9):";
+	@echo "  vagrant-up              # Start VM";
+	@echo "  vagrant-provision       # Run ansible (default: JDK 17,21, active: 21)";
+	@echo "  vagrant-destroy         # Destroy VM";
+	@echo "  vagrant-ssh             # SSH into VM";
+	@echo "  vagrant-multi           # Provision with custom versions";
+	@echo "                          # e.g., make vagrant-multi JDK_VERSIONS=11,17,21 JDK_VERSION=17";
 	@echo ""
-	@echo "Vagrant with specific distro:"
-	@echo "  vagrant-ubuntu-up       # Start Ubuntu 24.04 VM"
-	@echo "  vagrant-ubuntu-provision"
-	@echo "  vagrant-ubuntu-destroy"
-	@echo "  vagrant-ubuntu-ssh"
-	@echo "  vagrant-rocky-up        # Start Rocky Linux 9 VM"
-	@echo "  vagrant-rocky-provision"
-	@echo "  vagrant-rocky-destroy"
-	@echo "  vagrant-rocky-ssh"
+	@echo "Vagrant with specific distro:";
+	@echo "  vagrant-ubuntu-up       # Start Ubuntu 24.04 VM";
+	@echo "  vagrant-ubuntu-provision";
+	@echo "  vagrant-ubuntu-destroy";
+	@echo "  vagrant-ubuntu-ssh";
+	@echo "  vagrant-rocky-up        # Start Rocky Linux 9 VM";
+	@echo "  vagrant-rocky-provision";
+	@echo "  vagrant-rocky-destroy";
+	@echo "  vagrant-rocky-ssh";
 	@echo ""
 	@echo "Override KITCHEN_YAML=/path/to/.kitchen.yml when needed."
 
