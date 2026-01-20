@@ -132,17 +132,30 @@ ansible-playbook -i localhost, -c local playbook.yml \
 192.168.1.101 ansible_user=rocky ansible_become=yes
 ```
 
-## Local Testing
+## Makefile Targets
 
-This role supports both Vagrant and Test Kitchen for local testing.
+Run `make help` for all available targets:
 
 ### Validation
 
-Run validation checks (linting, syntax):
+```bash
+make setup          # Verify and setup development environment
+make lint           # Run ansible-lint
+make syntax         # Check playbook syntax
+make check          # Run all validation checks
+```
+
+### Utilities
 
 ```bash
-make check
+make deps             # Install Ansible collections
+make list-kitchen-instances  # List kitchen instances
+make destroy-all      # Destroy all kitchen instances
 ```
+
+## Local Testing
+
+This role supports both Vagrant and Test Kitchen for local testing.
 
 ### Prerequisites
 
