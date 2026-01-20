@@ -27,12 +27,12 @@ MAX_TRANSFER_SIZE_MB := 50
 # Validation Targets
 # ============================================================================ 
 .PHONY: lint
-lint:
+lint: deps
 	@echo "Running ansible-lint..."
 	ansible-lint .
 
 .PHONY: syntax
-syntax:
+syntax: deps
 	@echo "Checking playbook syntax..."
 	ansible-playbook --syntax-check tests/playbook.yml -i tests/inventory
 
@@ -59,7 +59,7 @@ setup:
 
 deps:
 	@echo "Installing Ansible collections..."
-	ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections --force
+	ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections
 
 # ============================================================================ 
 # Preflight
