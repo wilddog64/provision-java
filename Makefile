@@ -40,10 +40,23 @@ syntax:
 check: lint syntax
 	@echo "All validation checks passed."
 
-# ============================================================================ 
+# ============================================================================
+
 # Utility Targets
-# ============================================================================ 
+
+# ============================================================================
+
+.PHONY: setup
+
+setup:
+
+	@./scripts/setup.sh all
+
+
+
 .PHONY: deps
+
+
 deps:
 	@echo "Installing Ansible collections..."
 	ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections --force
