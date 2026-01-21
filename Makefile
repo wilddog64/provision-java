@@ -148,14 +148,14 @@ destroy-all:
 # Test all suites on a platform
 define TEST_ALL_SUITES
 .PHONY: test-all-$(1)
-test-all-$(1): preflight
+test-all-$(1): preflight destroy-$(1)
 	@$(foreach s,$(SUITES),echo "=== Testing suite: $(s)-$(1) ===" && KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) test $(s)-$(1) &&) true
 endef
 
 # Test specific suite on platform
 define KITCHEN_SUITE_PLATFORM_TARGETS
 .PHONY: test-$(1)-$(2)
-test-$(1)-$(2): preflight
+test-$(1)-$(2): preflight destroy-$(1)-$(2)
 	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) test $(1)-$(2)
 
 .PHONY: converge-$(1)-$(2)
@@ -174,7 +174,7 @@ endef
 # Platform-level targets (shortcuts for default suite)
 define KITCHEN_PLATFORM_TARGETS
 .PHONY: test-$(1)
-test-$(1): preflight
+test-$(1): preflight destroy-$(1)
 	KITCHEN_YAML=$(KITCHEN_YAML) $(KITCHEN_CMD) test default-$(1)
 
 .PHONY: converge-$(1)
