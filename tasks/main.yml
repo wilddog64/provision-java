@@ -17,6 +17,11 @@
   ansible.builtin.debug:
     var: ansible_facts['os_family']
 
+- name: Include linux-base role
+  ansible.builtin.include_role:
+    name: linux-base
+  when: ansible_facts['system'] == 'Linux'
+
 - name: Include systemd-resolved tasks
   ansible.builtin.include_tasks: "tasks/systemd-resolved.yml"
   when: ansible_facts['system'] == 'Linux'
