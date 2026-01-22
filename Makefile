@@ -122,6 +122,7 @@ help:
 	@echo "  vagrant-provision       # Run ansible (default: JDK 17,21, active: 21)";
 	@echo "  vagrant-destroy         # Destroy VM";
 	@echo "  vagrant-ssh             # SSH into VM";
+	@echo "  fix-vbox-locks          # Fix locked/stuck VirtualBox VMs";
 	@echo "  vagrant-multi           # Provision with custom versions";
 	@echo "                          # e.g., make vagrant-multi JDK_VERSIONS=11,17,21 JDK_VERSION=17";
 	@echo ""
@@ -195,9 +196,9 @@ $(foreach platform,$(PLATFORMS),$(eval $(call KITCHEN_PLATFORM_TARGETS,$(platfor
 $(foreach platform,$(PLATFORMS),$(foreach suite,$(SUITES),$(eval $(call KITCHEN_SUITE_PLATFORM_TARGETS,$(suite),$(platform)))))
 
 # Vagrant targets (default: Rocky Linux 9)
-.PHONY: vagrant-up vagrant-provision vagrant-destroy vagrant-ssh vagrant-status
+.PHONY: vagrant-up vagrant-provision vagrant-destroy vagrant-ssh vagrant-status fix-vbox-locks
 
-vagrant-up:
+vagrant-up: vagrant-destroy
 	vagrant up
 
 vagrant-provision:
@@ -211,6 +212,28 @@ vagrant-ssh:
 
 vagrant-status:
 	vagrant status
+
+fix-vbox-locks:
+	@echo "Checking for locked VirtualBox VMs..."
+	@pids=$$(ps aux | grep VBoxHeadless | grep "provision-java" | grep -v grep | awk '{print $$2}'); \
+	if [ -n "$$pids" ]; then \
+		echo "Found hung VBoxHeadless process(es): $$pids"; \
+		echo "Killing..."; \
+		kill -9 $$pids; \
+	else \
+		echo "No hung VBox processes found."; \
+	fi
+	@echo "Cleaning up stuck VMs..."
+	@vms=$$(VBoxManage list vms | grep "provision-java" | grep -o '{\(.*\)}' | tr -d '{}'); \
+	for uuid in $$vms; do \
+		echo "Checking VM: $$uuid"; \
+		state=$$(VBoxManage showvminfo $$uuid --machinereadable | grep '^VMState=' | cut -d'"' -f2); \
+		if [ "$$state" = "aborted" ] || [ "$$state" = "stopping" ]; then \
+			echo "  VM in bad state ($$state). Unregistering..."; \
+			VBoxManage unregistervm $$uuid --delete || true; \
+		fi; \
+	done
+	@echo "Done."
 
 # Vagrant with custom JDK versions
 # Usage: make vagrant-multi JDK_VERSIONS=11,17,21 JDK_VERSION=17
