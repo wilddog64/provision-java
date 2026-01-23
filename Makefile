@@ -60,6 +60,8 @@ setup:
 deps:
 	@echo "Installing Ansible collections..."
 	ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections
+	@echo "Installing Ansible roles..."
+	ansible-galaxy role install -r requirements.yml -p ./roles
 
 # ============================================================================ 
 # Preflight

@@ -38,6 +38,22 @@ ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./col
 | `java_keep_versions` | `10` | Number of old Java versions to keep (0 = keep all) |
 | `java_temp_dir` | `C:/temp` | Temporary directory for downloads |
 
+### Azure DevOps Agent (Linux)
+
+This role includes `linux-base`, which can optionally install an Azure DevOps agent.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `install_ado_agent` | `true` | Set to `false` to disable agent installation |
+| `ado_pat_token` | `env:ADO_PAT_TOKEN` | PAT token for agent configuration |
+
+To configure the agent, export your PAT token before running:
+
+```bash
+export ADO_PAT_TOKEN="your-token"
+make vagrant-provision
+```
+
 ## Features
 
 ### Linux

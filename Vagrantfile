@@ -31,6 +31,7 @@ Vagrant.configure("2") do |config|
       # Install multiple JDK versions, set default via jdk_version
       'jdk_versions' => ENV.fetch('JDK_VERSIONS', '17,21').split(',').map(&:to_i),
       'jdk_version' => ENV.fetch('JDK_VERSION', '21').to_i,
+      'ado_pat_token' => ENV['ADO_PAT_TOKEN']
     }
   end
   # Disable automatic box update checking. If you disable this, then
