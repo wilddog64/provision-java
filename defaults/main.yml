@@ -16,7 +16,8 @@ require_oracle_java: true
 require_jce: true
 
 # Windows Java installation settings
-java_install_base_dir: 'C:/java'  # Base installation directory
+install_drive: 'C:'
+java_install_base_dir: "{{ install_drive }}/java"  # Base installation directory
 java_symlink_name: 'current'      # Symlink name pointing to active Java version
 java_keep_versions: 10            # Number of old Java versions to keep (0 = keep all)
-java_temp_dir: 'C:/temp'          # Temporary directory for downloads
+java_temp_dir: "{{ install_drive }}/temp"          # Temporary directory for downloads
