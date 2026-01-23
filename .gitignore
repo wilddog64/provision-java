@@ -18,3 +18,5 @@ Gemfile.lock
 .direnv/
 collections/
 .ansible/.claude/
+roles/
+.claude/
