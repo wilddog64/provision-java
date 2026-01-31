@@ -36,30 +36,46 @@
 - name: Set Java alternatives (RedHat)
   ansible.builtin.shell: |
     set -o pipefail
-    java_path=$(alternatives --display java 2>/dev/null | grep "^/usr/lib/jvm/java-{{ jdk_version }}" | head -1 | awk '{print $1}')
-    if [ -n "$java_path" ]; then
-      alternatives --set java "$java_path"
+    # Find the java binary path registered in alternatives for the desired version
+    java_path=$(alternatives --display java 2>/dev/null | grep "/java-{{ jdk_version }}" | grep -o '^/[^ ]*' | head -1)
+    if [ -z "$java_path" ]; then
+      # Fallback: find from filesystem
+      java_path=$(ls /usr/lib/jvm/java-{{ jdk_version }}-openjdk-*/bin/java 2>/dev/null | head -1)
     fi
+    if [ -z "$java_path" ]; then
+      echo "ERROR: Could not find java binary for JDK {{ jdk_version }}" >&2
+      echo "Alternatives output:" >&2
+      alternatives --display java 2>&1 >&2 || true
+      echo "JVM dirs:" >&2
+      ls /usr/lib/jvm/ 2>&1 >&2 || true
+      exit 1
+    fi
+    echo "Setting java alternative to: $java_path"
+    alternatives --set java "$java_path"
   register: update_alternatives_redhat_java
   changed_when: update_alternatives_redhat_java.rc == 0
-  failed_when: false
   when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Set javac alternatives (RedHat)
   ansible.builtin.shell: |
     set -o pipefail
-    javac_path=$(alternatives --display javac 2>/dev/null | grep "^/usr/lib/jvm/java-{{ jdk_version }}" | head -1 | awk '{print $1}')
-    if [ -n "$javac_path" ]; then
-      alternatives --set javac "$javac_path"
+    javac_path=$(alternatives --display javac 2>/dev/null | grep "/java-{{ jdk_version }}" | grep -o '^/[^ ]*' | head -1)
+    if [ -z "$javac_path" ]; then
+      javac_path=$(ls /usr/lib/jvm/java-{{ jdk_version }}-openjdk-*/bin/javac 2>/dev/null | head -1)
     fi
+    if [ -z "$javac_path" ]; then
+      echo "ERROR: Could not find javac binary for JDK {{ jdk_version }}" >&2
+      exit 1
+    fi
+    echo "Setting javac alternative to: $javac_path"
+    alternatives --set javac "$javac_path"
   register: update_alternatives_redhat_javac
   changed_when: update_alternatives_redhat_javac.rc == 0
-  failed_when: false
   when: ansible_facts['os_family'] == 'RedHat'
 
 - name: Get JAVA_HOME from javac
   ansible.builtin.shell: >
-    dirname "$(dirname "$(readlink -f "$(command -v javac)")")"
+    dirname "$(dirname "$(readlink -f /usr/bin/javac)")"
   register: java_home_result
   changed_when: false
 
@@ -112,12 +128,12 @@
     success_msg: "javac binary exists at {{ java_home }}/bin/javac"
 
 - name: Verify Java installation
-  ansible.builtin.command: java -version
+  ansible.builtin.command: "{{ java_home }}/bin/java -version"
   register: java_version_output
   changed_when: false
 
 - name: Verify javac installation
-  ansible.builtin.command: javac -version
+  ansible.builtin.command: "{{ java_home }}/bin/javac -version"
   register: javac_version_output
   changed_when: false
 
