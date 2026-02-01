@@ -7,6 +7,7 @@ This Ansible role installs OpenJDK on Linux (Debian/Ubuntu and RedHat/Rocky/Cent
 - Control node: Python 3.9+, Ansible 2.14+
 - Linux targets: Debian/Ubuntu or RedHat/Rocky/CentOS with package manager access
 - Windows targets: Windows host accessible over WinRM with administrator rights
+- GitHub CLI (`gh`) and `jq` (for the branch protection helper)
 
 ## Dependencies
 
@@ -55,6 +56,16 @@ make vagrant-provision
 ```
 
 If the environment variable is not set, the agent configuration tasks will be skipped automatically.
+
+### CI and GitHub Actions
+
+- GitHub Actions runs `.github/workflows/validation.yml`, which mirrors `make check`.
+- `bin/enforce-branch-protection` (via `make enforce-branch-protection`) configures branch protection to require the validation job.
+- `bin/add-deploy-key` uploads an SSH deploy key to any repo using the GitHub CLI. Example:
+
+  ```bash
+  bin/add-deploy-key ~/.ssh/java-ci.pub "Provision Java CI"
+  ```
 
 ## Features
 
