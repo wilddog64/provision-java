@@ -6,7 +6,9 @@
       ansible.builtin.set_fact:
         java_home: "{{ java_install_base_dir }}/{{ java_symlink_name }}"
         java_versioned_dir: "{{ java_install_base_dir }}/jdk-{{ jdk_version }}"
-        java_download_url: "https://aka.ms/download-jdk/microsoft-jdk-{{ jdk_version }}-windows-x64.zip"
+        java_download_url: >-
+          {{ 'https://aka.ms/download-jdk/' ~ 'microsoft-jdk-' ~
+             jdk_version ~ '-windows-x64.zip' }}
 
     - name: Check if target version is already installed
       ansible.windows.win_stat:
@@ -14,14 +16,17 @@
       register: java_target_installed
 
     - name: Capture existing target Java version
-      ansible.windows.win_command: '"{{ java_versioned_dir }}/bin/java.exe" -version'
+      ansible.windows.win_command: >-
+        "{{ java_versioned_dir }}/bin/java.exe" -version
       register: java_target_version_cmd
       when: java_target_installed.stat.exists
       changed_when: false
 
     - name: Determine if existing target matches requested version
       ansible.builtin.set_fact:
-        java_target_matches: "{{ (java_target_version_cmd.stderr | default('')) is search(jdk_version | string) }}"
+        java_target_matches: >-
+          {{ (java_target_version_cmd.stderr | default(''))
+             is search(jdk_version | string) }}
       when: java_target_installed.stat.exists
 
     - name: Check if symlink exists
@@ -34,7 +39,8 @@
         java_symlink_needs_update: >-
           {{ (not java_symlink_stat.stat.exists | default(false)) or
           ((java_symlink_stat.stat.exists | default(false)) and
-          ((java_symlink_stat.stat.lnk_source | default('')) | lower) != (java_versioned_dir | lower)) }}
+          ((java_symlink_stat.stat.lnk_source | default('')) | lower)
+          != (java_versioned_dir | lower)) }}
 
     - name: Find any existing Java installations
       ansible.windows.win_find:
@@ -50,7 +56,9 @@
           {{ (existing_java_dirs.files | length) > 0 and
           ((not java_target_installed.stat.exists) or
           (java_target_matches is defined and not java_target_matches)) }}
-        existing_java_path: "{{ existing_java_dirs.files[0].path if (existing_java_dirs.files | length) > 0 else '' }}"
+        existing_java_path: >-
+          {{ existing_java_dirs.files[0].path
+             if (existing_java_dirs.files | length) > 0 else '' }}
 
     - name: Display Java installation status
       ansible.builtin.debug:
@@ -58,7 +66,8 @@
           {% if java_target_installed.stat.exists %}
           Java {{ jdk_version }} already installed at {{ java_home }}
           {% elif java_needs_upgrade %}
-          Java upgrade needed - existing installation found at {{ existing_java_path }}
+          Java upgrade needed - existing installation found at
+          {{ existing_java_path }}
           {% else %}
           Java not found - will install
           {% endif %}
@@ -67,7 +76,10 @@
       ansible.windows.win_file:
         path: "{{ java_home }}"
         state: absent
-      when: java_symlink_stat.stat.exists and (java_needs_upgrade or not java_target_installed.stat.exists or java_symlink_needs_update | bool)
+      when: >-
+        java_symlink_stat.stat.exists and
+        (java_needs_upgrade or not java_target_installed.stat.exists or
+        java_symlink_needs_update | bool)
 
     - name: Ensure temp directory exists
       ansible.windows.win_file:
@@ -117,17 +129,22 @@
 
     - name: Display extracted directory
       ansible.builtin.debug:
-        msg: "Found extracted directory: {{ extracted_java_dir_path | default('none') }}"
+        msg: >-
+          Found extracted directory:
+          {{ extracted_java_dir_path | default('none') }}
       when: not java_target_installed.stat.exists or java_needs_upgrade
 
     - name: Rename extracted directory to target name
-      ansible.windows.win_command: 'cmd /c move "{{ extracted_java_dir_path }}" "{{ java_versioned_dir }}"'
+      ansible.windows.win_command: >-
+        cmd /c move "{{ extracted_java_dir_path }}" "{{ java_versioned_dir }}"
       when:
         - not java_target_installed.stat.exists
         - extracted_java_dir_path | default('') | length > 0
         - extracted_java_dir_path != java_versioned_dir
       register: java_rename_result
-      failed_when: java_rename_result.rc != 0 and 'already exists' not in java_rename_result.stderr
+      failed_when: >-
+        java_rename_result.rc != 0 and
+        'already exists' not in java_rename_result.stderr
 
     - name: Verify Java files were extracted
       ansible.windows.win_stat:
@@ -139,15 +156,21 @@
       ansible.builtin.assert:
         that:
           - java_files_check.stat.exists
-        fail_msg: "Java files not found after extraction at {{ java_versioned_dir }}"
+        fail_msg: >-
+          Java files not found after extraction at {{ java_versioned_dir }}
         success_msg: "Java files verified at {{ java_versioned_dir }}"
       when: not java_target_installed.stat.exists
 
     - name: Create symlink to current Java version
-      ansible.windows.win_command: 'cmd /c mklink /D "{{ java_home }}" "{{ java_versioned_dir }}"'
-      when: not java_target_installed.stat.exists or java_needs_upgrade or java_symlink_needs_update | bool
+      ansible.windows.win_command: >-
+        cmd /c mklink /D "{{ java_home }}" "{{ java_versioned_dir }}"
+      when: >-
+        not java_target_installed.stat.exists or java_needs_upgrade or
+        java_symlink_needs_update | bool
       register: java_symlink_result
-      failed_when: java_symlink_result.rc != 0 and 'already exists' not in java_symlink_result.stderr
+      failed_when: >-
+        java_symlink_result.rc != 0 and
+        'already exists' not in java_symlink_result.stderr
 
     - name: Display symlink creation result
       ansible.builtin.debug:
@@ -164,7 +187,9 @@
 
     - name: Sort Java directories by modification time (newest first)
       ansible.builtin.set_fact:
-        sorted_java_dirs: "{{ all_java_dirs.files | sort(attribute='lastwritetime') | reverse | list }}"
+        sorted_java_dirs: >-
+          {{ all_java_dirs.files | sort(attribute='lastwritetime')
+             | reverse | list }}
       when:
         - java_keep_versions | int > 0
         - all_java_dirs.files is defined
@@ -172,7 +197,8 @@
 
     - name: Identify old Java versions to remove
       ansible.builtin.set_fact:
-        java_dirs_to_remove: "{{ sorted_java_dirs[java_keep_versions | int :] }}"
+        java_dirs_to_remove: >-
+          {{ sorted_java_dirs[java_keep_versions | int :] }}
       when:
         - java_keep_versions | int > 0
         - sorted_java_dirs is defined
@@ -216,7 +242,10 @@
 
     - name: Parse installed Java version
       ansible.builtin.set_fact:
-        installed_java_version: "{{ java_version_output.stderr | regex_search('openjdk version \"([0-9.]+)\"', '\\1') | first | default('unknown') }}"
+        installed_java_version: >-
+          {{ java_version_output.stderr
+             | regex_search('openjdk version \"([0-9.]+)\"', '\\1')
+             | first | default('unknown') }}
       when: java_version_output.rc == 0
 
     - name: Display Java version information
@@ -228,8 +257,11 @@
         that:
           - java_version_output.rc == 0
           - (jdk_version | string) in java_version_output.stderr
-        fail_msg: "Java installation verification failed - expected version {{ jdk_version }}"
-        success_msg: "Java {{ jdk_version }} installed successfully at {{ java_home }}"
+        fail_msg: >-
+          Java installation verification failed - expected version
+          {{ jdk_version }}
+        success_msg: >-
+          Java {{ jdk_version }} installed successfully at {{ java_home }}
 
     - name: Clean up downloaded zip
       ansible.windows.win_file:
