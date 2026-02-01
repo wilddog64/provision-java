@@ -1,7 +1,6 @@
 ---
 - hosts: all
-
   pre_tasks:
-      - name: output java version
-        debug:
-          var:  ohai_languages.java.version 
+    - name: Output Java version
+      ansible.builtin.debug:
+        var: ohai_languages.java.version
