@@ -243,20 +243,20 @@
     - name: Parse installed Java version
       ansible.builtin.set_fact:
         installed_java_version: >-
-          {{ java_version_output.stderr
-             | regex_search('openjdk version \"([0-9.]+)\"', '\\1')
+          {{ (java_version_output.stdout + java_version_output.stderr)
+             | regex_findall('version \"([0-9.]+)\"')
              | first | default('unknown') }}
       when: java_version_output.rc == 0
 
     - name: Display Java version information
       ansible.builtin.debug:
-        msg: "Installed Java version: {{ java_version_output.stderr }}"
+        msg: "Installed Java version: {{ (java_version_output.stdout + java_version_output.stderr) }}"
 
     - name: Assert Java is installed correctly
       ansible.builtin.assert:
         that:
           - java_version_output.rc == 0
-          - (jdk_version | string) in java_version_output.stderr
+          - (jdk_version | string) in (java_version_output.stdout + java_version_output.stderr)
         fail_msg: >-
           Java installation verification failed - expected version
           {{ jdk_version }}

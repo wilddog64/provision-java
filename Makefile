@@ -7,12 +7,17 @@ else
   DEFAULT_KITCHEN_YAML := .kitchen.yml
 endif
 
-KITCHEN_YAML ?= $(DEFAULT_KITCHEN_YAML)
+KITCHEN_YAML ?= .kitchen.yml
+BUNDLE_BIN := $(shell command -v bundle 2>/dev/null)
+ifdef BUNDLE_BIN
+KITCHEN_CMD ?= bundle exec kitchen
+else
 RBENV_BIN := $(shell command -v rbenv 2>/dev/null)
 ifdef RBENV_BIN
-  KITCHEN_CMD ?= rbenv exec kitchen
+KITCHEN_CMD ?= rbenv exec kitchen
 else
-  KITCHEN_CMD ?= kitchen
+KITCHEN_CMD ?= kitchen
+endif
 endif
 
 PLATFORMS := win11 ubuntu-2404 rockylinux9
@@ -22,6 +27,9 @@ SUITES := default multi upgrade idempotence
 MAX_TRANSFER_SIZE_MB := 50
 
 .DEFAULT_GOAL := help
+
+# Protected branch for GitHub Actions status enforcement
+PROTECTED_BRANCH ?= main
 
 # ============================================================================ 
 # Validation Targets
@@ -39,6 +47,10 @@ syntax: deps
 .PHONY: check
 check: lint syntax
 	@echo "All validation checks passed."
+
+.PHONY: enforce-branch-protection
+enforce-branch-protection:
+	@TARGET_BRANCH=$(PROTECTED_BRANCH) bin/enforce-branch-protection
 
 # ============================================================================
 
@@ -96,6 +108,7 @@ help:
 	@echo "  syntax              # Check playbook syntax";
 	@echo "  check               # Run all validation checks";
 	@echo "  deps                # Install Ansible collections to ./collections";
+	@echo "  enforce-branch-protection # Require CI status on $(PROTECTED_BRANCH)";
 	@echo ""
 	@echo "Utility:";
 	@echo "  list-kitchen-instances  # List all kitchen instances";
