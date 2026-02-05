@@ -243,8 +243,8 @@
     - name: Parse installed Java version
       ansible.builtin.set_fact:
         installed_java_version: >-
-          {{ java_version_output.stderr
-             | regex_search('openjdk version \"([0-9.]+)\"', '\\1')
+          {{ (java_version_output.stdout + java_version_output.stderr)
+             | regex_findall('version \"([0-9.]+)\"')
              | first | default('unknown') }}
       when: java_version_output.rc == 0
 
