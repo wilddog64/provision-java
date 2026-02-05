@@ -250,13 +250,13 @@
 
     - name: Display Java version information
       ansible.builtin.debug:
-        msg: "Installed Java version: {{ java_version_output.stderr }}"
+        msg: "Installed Java version: {{ (java_version_output.stdout + java_version_output.stderr) }}"
 
     - name: Assert Java is installed correctly
       ansible.builtin.assert:
         that:
           - java_version_output.rc == 0
-          - (jdk_version | string) in java_version_output.stderr
+          - (jdk_version | string) in (java_version_output.stdout + java_version_output.stderr)
         fail_msg: >-
           Java installation verification failed - expected version
           {{ jdk_version }}
