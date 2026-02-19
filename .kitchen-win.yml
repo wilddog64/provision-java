@@ -6,17 +6,12 @@ driver:
 provisioner:
   require_chef_omnibus: false
   name: ansible_playbook
-  hosts: test-kitchen
+  host: test-kitchen
   require_ansible_repo: true
   playbook: tests/playbook.yml
+  roles_path: ..
   ansible_version: latest
   host_key_checking: false
-  ignore_paths:
-    - .direnv
-    - .git
-    - .kitchen
-    - .vagrant
-    - .claude
   # vault_password_file: ./secrets/my_pass.txt
   idempotency_test: false
   chef_bootstrap_url: null
@@ -33,16 +28,20 @@ platforms:
       box: hashicorp-education/ubuntu-24-04
   - name: rockylinux9
     driver_config:
-      box: bento/rockylinux-9
+      driver_config:
+        box: centos/8
   - name: win11
     driver_config:
       box: stromweld/windows-11
       communicator: winrm
+      network:
+        - ["forwarded_port", {guest: 5985, host: 25985}]
+        - ["forwarded_port", {guest: 5986, host: 25986}]
     transport:
       name: winrm
       elevated: true
       ssl_peer_verification: false
-      port: 5985
+      port: 25985
       winrm_transport: :plaintext
       ssl: false
       connection_retries: 5
@@ -52,6 +51,7 @@ platforms:
       hosts: test-kitchen
       require_ansible_repo: true
       playbook: tests/playbook.yml
+      roles_path: ..
       ansible_version: latest
       ansible_host_key_checking: false
       idempotency_test: false
@@ -65,7 +65,7 @@ platforms:
         skip_migration: true
         ansible_connection: winrm
         ansible_winrm_transport: basic
-        ansible_port: 5985
+        ansible_port: 25985
         ansible_winrm_scheme: http
         ansible_winrm_server_cert_validation: ignore
         ansible_user: vagrant
@@ -74,40 +74,5 @@ platforms:
 
 suites:
   - name: default
-    provisioner:
-      extra_vars:
-        jdk_version: 21
-    verifier:
-      name: shell
-      command: exit 0
-
-  - name: multi
-    provisioner:
-      extra_vars:
-        jdk_versions:
-          - 17
-          - 21
-        jdk_version: 21
-    verifier:
-      name: shell
-      command: exit 0
-
-  - name: upgrade
-    provisioner:
-      extra_vars:
-        jdk_versions:
-          - 17
-          - 21
-        jdk_version: 17
-    verifier:
-      name: shell
-      command: exit 0
-
-  - name: idempotence
-    provisioner:
-      extra_vars:
-        jdk_version: 21
-      idempotency_test: true
-    verifier:
-      name: shell
-      command: exit 0
+    run_list:
+    attributes:

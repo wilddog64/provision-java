@@ -12,18 +12,14 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = 'hashicorp-education/ubuntu-24-04'
+  # Use VAGRANT_BOX env var to switch distros (see bin/vagrant-ubuntu, bin/vagrant-rocky)
+  config.vm.box = ENV.fetch('VAGRANT_BOX', 'bento/rockylinux-9')
 
-  config.vm.provision "shell", inline: <<-SHELL
-set -eu
-sudo mkdir -p /etc/systemd/resolved.conf.d
-cat <<'EOF' | sudo tee /etc/systemd/resolved.conf.d/dns.conf >/dev/null
-[Resolve]
-DNS=1.1.1.1 8.8.8.8
-FallbackDNS=9.9.9.9 8.8.4.4
-EOF
-sudo systemctl restart systemd-resolved
-SHELL
+  # config.vm.communicator = "winrm"
+  # config.winrm.username = "vagrant"
+  # config.winrm.password = "vagrant"
+  # config.winrm.transport = :plaintext
+  # config.winrm.basic_auth_only = true
 
   # configure ansible provisioner
   config.vm.provision :ansible do | ansible |
@@ -31,7 +27,11 @@ SHELL
     ansible.playbook = 'tests/playbook.yml' # point to local playbook for easy testing
     # ansible.verbose  = 'vv'                 # minimum verbose
     ansible.extra_vars = {
-        'ansible_python_interpreter' => '/usr/bin/python3',
+      'ansible_python_interpreter' => '/usr/bin/python3',
+      # Install multiple JDK versions, set default via jdk_version
+      'jdk_versions' => ENV.fetch('JDK_VERSIONS', '17,21').split(',').map(&:to_i),
+      'jdk_version' => ENV.fetch('JDK_VERSION', '21').to_i,
+      'ado_pat_token' => ENV.fetch('ADO_PAT_TOKEN', 'placeholder')
     }
   end
   # Disable automatic box update checking. If you disable this, then

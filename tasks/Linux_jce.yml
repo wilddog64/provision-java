@@ -1,55 +1,66 @@
 ---
-- name: create jce path
-  set_fact:
+- name: Create JCE path
+  ansible.builtin.set_fact:
     jce_location: "{{ oracle_jce_home }}/{{ oracle_java_version }}"
 
-- name: create jce home
-  file:
+- name: Create JCE home
+  ansible.builtin.file:
     path: "{{ jce_location }}"
     state: directory
     owner: root
     group: root
     mode: "0755"
 
-- name: download oracle_jce {{ oracle_java_version }}
-  command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip {{ oracle_jce_url }}
-  args:
-    creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+- name: Download Oracle JCE {{ oracle_java_version }}
+  ansible.builtin.get_url:
+    url: "{{ oracle_jce_url }}"
+    dest: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+    headers:
+      Cookie: oraclelicense=accept-securebackup-cookie
+    mode: '0644'
   when: oracle_java_version == 8
 
-- name: download oracle_jce 7
-  command: curl -L -H 'Cookie:oraclelicense=accept-securebackup-cookie' -o {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip {{ oracle_jce7_url }}
-  args:
-    creates: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+- name: Download Oracle JCE 7
+  ansible.builtin.get_url:
+    url: "{{ oracle_jce7_url }}"
+    dest: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+    headers:
+      Cookie: oraclelicense=accept-securebackup-cookie
+    mode: '0644'
   when: oracle_java_version == 7
 
-- name: extract jce zip file
-  command: unzip -j {{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip -d {{ jce_location }}
-  args:
+- name: Extract JCE zip file
+  ansible.builtin.unarchive:
+    src: "{{ oracle_jce_download_location }}/jce-{{ oracle_java_version }}.zip"
+    dest: "{{ jce_location }}"
+    remote_src: true
+    extra_opts:
+      - "-j"
     creates: "{{ jce_location }}/local_policy.jar"
 
-- name: create symlinks to jce files
-  file:
+- name: Create symlinks to JCE files
+  ansible.builtin.file:
     src: "{{ jce_location }}/{{ item }}"
     dest: "{{ oracle_java_home }}/jre/lib/security/{{ item }}"
-    force: yes
+    force: true
     state: link
   register: symlinks
   with_items:
     - local_policy.jar
     - US_export_policy.jar
 
-- name: check if jce is enabled
-  shell: >
+- name: Check if JCE is enabled
+  ansible.builtin.shell: >
     {{ oracle_java_home }}/bin/jrunscript -e 'print (javax.crypto.Cipher.getMaxAllowedKeyLength("RC5") >= 256);'
   register: jce
-  changed_when: False
+  changed_when: false
 
 
-- name: set a jce fact
-  set_fact:
+- name: Set a JCE fact
+  ansible.builtin.set_fact:
     jce_enabled: "{{ jce.stdout }}"
 
-- assert:
+- name: Assert JCE is enabled
+  ansible.builtin.assert:
     that:
       - jce_enabled

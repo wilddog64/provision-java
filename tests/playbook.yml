@@ -4,5 +4,7 @@
   gather_facts: no
   vars:
     jdk_version: 21
+    java_install_dir: c:/java
+
   roles:
-    - provision-java
+    - role: "{{ playbook_dir }}/.."

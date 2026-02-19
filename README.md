@@ -1,74 +1,313 @@
-# provision-oracle-java
+# Provision Java Role
 
-an Ansible role that will install oracle java and jce
+This Ansible role installs OpenJDK on Linux (Debian/Ubuntu and RedHat/Rocky/CentOS) and Microsoft OpenJDK on Windows. It supports installing multiple JDK versions and switching between them using the system alternatives mechanism.
 
 ## Requirements
 
-* Python 2.7 or greater
-* Ansible 2.0 or greater
-
-# Ansible.cfg
-
-In order to speed up facts gathering, we need to enable facts caching by adding these in the ```ansible.cfg [defaults] section```,
-
-    fact_caching = jsonfile
-    fact_caching_connection = $HOME/.ansible/tmp
-    gathering = smart
-
-To point to custom inventory file
-
-    inventory = $HOME/src/gitrepo/personal/ansible/ansible_inventory/inventory
-
-You will need to pull ansible_inventory repo from [here](https://stash.bbpd.io/projects/LID/repos/ansible_inventory/browse)
-
-## Role Variables
-These variables control how provision-oracle-java behavior
-
-### platform indedepend variables
-
-* oracle_java_version is a major oracle java version, i.e. 7, 8, ...
-* oracle_jce_url is where to download oracle jce package
-* oracle_jce7_url is where to download oracle jce 7 package (naming is out of whack)
-* oracle_jce_home is where oracle jce to be extracted to
-* require_oracle_java is a boolean flag to determine if java need to be installed. Default is yes.
-* require_jce is a boolean flag to determine if jce need to be installed. Default is yes.
-
-### platform specific variables
-
-#### vars/RedHat.yml - for RedHat family OSes
-* oracle_java_version_update is what update you want to have
-* oracle_java_version_build is what build will it be
-
-#### os system specific variables (these variable loaded based on ansible_system fact)
-* oracle_jce_home is a place where jce should be extracted to. Linux is /opt/java_jce-version and Windows is c:\opt\java_jce-version
-* oracle_jce_download_location is a place where jce.zip file should be downladed to. Linux is /tmp and Windows is c:\temp
+- Control node: Python 3.9+, Ansible 2.14+
+- Linux targets: Debian/Ubuntu or RedHat/Rocky/CentOS with package manager access
+- Windows targets: Windows host accessible over WinRM with administrator rights
+- GitHub CLI (`gh`) and `jq` (for the branch protection helper)
 
 ## Dependencies
-* For windows, we need to have pywinrm package installed.
+
+Install required Ansible collections (installs to `./collections`):
+
+```bash
+# Use Make (recommended)
+make deps
+
+# Or manually
+ansible-galaxy collection install ansible.windows chocolatey.chocolatey -p ./collections
+```
+
+## Role Variables
+
+### Linux & Windows
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `jdk_version` | `21` | Default JDK version to install and set as active |
+| `jdk_versions` | `[]` | List of additional JDK versions to install |
+
+### Windows Only
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `java_install_base_dir` | `C:/java` | Base installation directory |
+| `java_symlink_name` | `current` | Symlink name pointing to active Java version |
+| `java_keep_versions` | `10` | Number of old Java versions to keep (0 = keep all) |
+| `java_temp_dir` | `C:/temp` | Temporary directory for downloads |
+
+### Azure DevOps Agent (Linux)
+
+This role includes `linux-base`, which can optionally install an Azure DevOps agent.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `install_ado_agent` | `true` | Set to `false` to disable agent installation |
+| `ado_pat_token` | `env:ADO_PAT_TOKEN` | PAT token for agent configuration |
+
+To configure the agent, export your PAT token in your terminal before running the provision command:
+
+```bash
+export ADO_PAT_TOKEN="your-secure-pat-token"
+make vagrant-provision
+```
+
+If the environment variable is not set, the agent configuration tasks will be skipped automatically.
+
+### CI and GitHub Actions
+
+- GitHub Actions runs `.github/workflows/validation.yml`, which mirrors `make check`.
+- `bin/enforce-branch-protection` (via `make enforce-branch-protection`) configures branch protection to require the validation job.
+- `bin/add-deploy-key` uploads an SSH deploy key to any repo using the GitHub CLI. Example:
+
+  ```bash
+  bin/add-deploy-key ~/.ssh/java-ci.pub "Provision Java CI"
+  ```
+
+## Features
+
+### Linux
+- Installs distribution-provided OpenJDK packages
+- Supports multiple JDK versions via `jdk_versions` list
+- Uses `update-java-alternatives` (Debian) or `alternatives` (RedHat) to switch versions
+- Sets `JAVA_HOME` in `/etc/profile.d/java.sh`
+
+### Windows
+- Downloads and installs Microsoft OpenJDK
+- Supports upgrade/downgrade between versions
+- Manages symlink for consistent `JAVA_HOME` path
+- Automatic cleanup of old versions based on retention policy
+- Sets `JAVA_HOME` environment variable system-wide
 
 ## Example Playbook
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+### Single JDK Version
 
-    ---
-    - hosts: all
-      become: yes
-      roles:
-    	- provision-oracle-java
+```yaml
+---
+- hosts: all
+  become: yes
+  roles:
+    - role: provision-java
+      vars:
+        jdk_version: 21
+```
+
+### Multiple JDK Versions
+
+```yaml
+---
+- hosts: all
+  become: yes
+  roles:
+    - role: provision-java
+      vars:
+        jdk_versions:
+          - 17
+          - 21
+        jdk_version: 21  # Set JDK 21 as default
+```
+
+### Switch Default Version
+
+```yaml
+---
+- hosts: all
+  become: yes
+  roles:
+    - role: provision-java
+      vars:
+        jdk_versions:
+          - 17
+          - 21
+        jdk_version: 17  # Switch default to JDK 17
+```
 
 ## Command Line Usage
 
-* ansible-playbook -vv -l jenkins-slaves -k tests/playbook.yml will apply playbook to a label test-jenkins defines in tests/inventory file. It will ask password for ssh session, and output level 2 verbosity to console
-* ansible-playbook -vvv -l w8x64s12-vm076.pd.local --extra-vars 'require_oracle_java=False oracle_java_version=8' -k tests/playbook.yml will install ```jce-8``` to a signle host w8x64s12-vm076.pd.local. Note that we have to specify oracle_java_version=8 in order to download jce 8
-* ansible-playbook -vvv -l acceptance-test-oracle-java8 --extra-vars 'require_oracle_java=False oracle_java_version=8' -k tests/playbook.yml will install ```jce-8``` all the nodes under acceptance-test-oracle_java8 group.
-* ansible-playbook -vvv -l acceptance-test-oracle-java8 --list-hosts will list all the hosts in acceptance-test-oracle-java8 group.
+### Run with ansible-playbook
 
+```bash
+# Install JDK 21 (default)
+ansible-playbook -i inventory playbook.yml
 
-## Note
-* a seperate inventory file for jenkins and jenkins slaves is created and set this in ansible.cfg file. You will need to pull the inventory repo from [here]sh://git@stash.bbpd.io/lid/ansible_inventory.git) in order for the above command to work
-* a special logic is created for handling JCE 7, but nothing change from the commad line or playbook
-* -k in ansible-playbook will prompt to ask for SSH password
+# Install multiple versions with JDK 17 as active
+ansible-playbook -i inventory playbook.yml \
+  -e '{"jdk_versions": [17, 21], "jdk_version": 17}'
+
+# Switch active version (assumes versions already installed)
+ansible-playbook -i inventory playbook.yml \
+  -e 'jdk_version=21'
+```
+
+### Run on localhost
+
+```bash
+ansible-playbook -i localhost, -c local playbook.yml \
+  -e '{"jdk_versions": [17, 21], "jdk_version": 21}' \
+  --become
+```
+
+### Example inventory file
+
+```ini
+[linux]
+192.168.1.100 ansible_user=ubuntu ansible_become=yes
+
+[redhat]
+192.168.1.101 ansible_user=rocky ansible_become=yes
+```
+
+## Makefile Targets
+
+Run `make help` for all available targets:
+
+### Validation
+
+```bash
+make setup          # Verify and setup development environment
+make lint           # Run ansible-lint
+make syntax         # Check playbook syntax
+make check          # Run all validation checks
+```
+
+### Utilities
+
+```bash
+make deps             # Install Ansible collections
+make list-kitchen-instances  # List kitchen instances
+make destroy-all      # Destroy all kitchen instances
+```
+
+## Local Testing
+
+This role supports both Vagrant and Test Kitchen for local testing.
+
+### Prerequisites
+
+- Vagrant
+- VirtualBox (or other supported provider)
+- Ruby with Bundler (for Test Kitchen)
+- kitchen-ansible gem (for Test Kitchen)
+
+### Vagrant Testing
+
+Quick local testing with Vagrant (default: Rocky Linux 9):
+
+```bash
+# Start VM with default versions (JDK 17 and 21, with 21 active)
+make vagrant-up
+
+# Re-provision to apply changes
+make vagrant-provision
+
+# SSH into VM to verify
+make vagrant-ssh
+
+# Destroy VM
+make vagrant-destroy
+```
+
+#### Test on Different Distros
+
+Use distro-specific targets or scripts:
+
+```bash
+# Ubuntu 24.04
+make vagrant-ubuntu-up
+make vagrant-ubuntu-provision
+make vagrant-ubuntu-ssh
+make vagrant-ubuntu-destroy
+
+# Rocky Linux 9
+make vagrant-rocky-up
+make vagrant-rocky-provision
+make vagrant-rocky-ssh
+make vagrant-rocky-destroy
+
+# Or use scripts directly
+./bin/vagrant-ubuntu up
+./bin/vagrant-rocky up
+```
+
+#### Custom JDK Versions
+
+Use environment variables to customize which versions to install:
+
+```bash
+# Install JDK 11, 17, 21 with 17 as active
+JDK_VERSIONS=11,17,21 JDK_VERSION=17 vagrant up
+
+# Or use Makefile target
+make vagrant-multi JDK_VERSIONS=11,17,21 JDK_VERSION=17
+
+# Switch active version without reinstalling
+JDK_VERSION=11 vagrant provision
+```
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `JDK_VERSIONS` | `17,21` | Comma-separated list of versions to install |
+| `JDK_VERSION` | `21` | Version to set as active default |
+
+### Test Kitchen
+
+For comprehensive testing across multiple platforms:
+
+```bash
+# List all available targets
+make help
+
+# List kitchen instances
+make list-kitchen-instances
+
+# Test on specific platform (default suite)
+make test-ubuntu-2404
+make test-rockylinux9
+make test-win11
+
+# Test specific suite on platform
+make test-multi-rockylinux9      # Install multiple JDK versions
+make test-upgrade-ubuntu-2404    # Test version switching
+make test-idempotence-rockylinux9
+
+# Converge without destroying
+make converge-rockylinux9
+make converge-ubuntu-2404
+
+# Destroy instances
+make destroy-rockylinux9
+make destroy-ubuntu-2404
+```
+
+### Test Suites
+
+| Suite | Description |
+|-------|-------------|
+| `default` | Install JDK 21 only |
+| `multi` | Install JDK 17 and 21, set 21 as default |
+| `upgrade` | Install JDK 17 and 21, set 17 as default |
+| `idempotence` | Verify idempotent behavior |
+
+### Preflight Check
+
+A preflight check runs automatically before `test` and `converge` targets to ensure the transfer size is reasonable (< 50MB). Run manually with:
+
+```bash
+make preflight
+```
+
+## Supported Platforms
+
+| Platform | Box |
+|----------|-----|
+| Ubuntu 24.04 | `hashicorp-education/ubuntu-24-04` |
+| Rocky Linux 9 | `bento/rockylinux-9` |
+| Windows 11 | `stromweld/windows-11` |
 
 ## License
 
-BSD
+[MIT](LICENSE)

@@ -1,5 +1,5 @@
 [java8]
-r6x64os-vm358.pd.local
+r6x64os-vm358.pd.local ansible_python_interpreter=/usr/bin/python3
 r6x64os-vm359.pd.local
 r6x64os-vm360.pd.local
 r6x64os-vm361.pd.local
@@ -12,6 +12,9 @@ r6x64os-vm408.pd.local
 r6x64os-vm409.pd.local
 r6x64os-vm410.pd.local
 
+[java8:vars]
+ansible_python_interpreter=/usr/bin/python3
+
 [acceptance-test-mssql]
 w8x64s12-vm083.pd.local # Acceptance-Test-Slave-MSSql-02
 w8x64s12-vm078.pd.local # Acceptance-Test-Slave-MSSql-03
@@ -23,6 +26,7 @@ w12dgs14-vm005.pd.local # Acceptance-Test-Slave-MSSql-09
 
 [acceptance-test-mssql:vars]
 ansible_user=administrator
+ansible_python_interpreter='C:/Python39/python.exe'
 
 [acceptance-test-oracle-java7]
 r6x64os-vm379.pd.local # Acceptance-Test-Slave-Oracle-05
@@ -74,6 +78,9 @@ acceptance-test-postgresql-java8
 [acceptance-test-linux:children]
 acceptance-test-oracle
 acceptance-test-postgresql
+
+[acceptance-test-linux:vars]
+ansible_python_interpreter=/usr/bin/python3
 
 [acceptance:children]
 acceptance-test-mssql

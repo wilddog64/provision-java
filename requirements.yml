@@ -1,0 +1,5 @@
+roles:
+  - name: linux-base
+    src: https://github.com/wilddog64/linux-base.git
+    scm: git
+    version: main

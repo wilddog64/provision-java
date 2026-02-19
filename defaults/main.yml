@@ -1,7 +1,23 @@
 ---
 # defaults file for ansible-java
+
+# JDK versions to install (list of versions, e.g., [17, 21])
+# All versions in this list will be installed and available via alternatives
+jdk_versions: []
+
+# Default JDK version (will be set as active via alternatives)
+# This version is always installed, even if not in jdk_versions list
+jdk_version: 21
+
 oracle_java_version: 8
 oracle_jce_url: http://download.oracle.com/otn-pub/java/jce/{{ oracle_java_version }}/jce_policy-{{ oracle_java_version }}.zip
 oracle_jce7_url: http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip
-require_oracle_java: yes
-require_jce: yes
+require_oracle_java: true
+require_jce: true
+
+# Windows Java installation settings
+install_drive: 'C:'
+java_install_base_dir: "{{ install_drive }}/java"  # Base installation directory
+java_symlink_name: 'current'      # Symlink name pointing to active Java version
+java_keep_versions: 10            # Number of old Java versions to keep (0 = keep all)
+java_temp_dir: "{{ install_drive }}/temp"          # Temporary directory for downloads

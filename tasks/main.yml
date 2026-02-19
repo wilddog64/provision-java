@@ -1,25 +1,39 @@
 ---
 # tasks file for ansible-java
-- name: collect facts
-  setup:
-  become: no
+- name: Collect facts
+  ansible.builtin.setup:
+  become: false
 
-- name: include vars
+- name: Include vars
   ansible.builtin.include_vars: "{{ item }}"
   with_first_found:
-    - "{{ ansible_facts['os_family'] | lower }}.yml"
-    - default.yml
-  vars:
-    ansible_search_path:
-      - "{{ role_path }}/vars"
+    - files:
+        - "{{ ansible_facts['os_family'] }}.yml"
+        - default.yml
+      paths:
+        - "{{ role_path }}/vars"
 
-- name: output facts
-  debug:
+- name: Output facts
+  ansible.builtin.debug:
     var: ansible_facts['os_family']
 
-- include_tasks: "tasks/systemd-resolved.yml"
+- name: Include linux-base role
+  ansible.builtin.include_role:
+    name: linux-base
   when: ansible_facts['system'] == 'Linux'
 
-- include_tasks: "tasks/query-adoptium-jdk.yml"
+- name: Include systemd-resolved tasks
+  ansible.builtin.include_tasks: "tasks/systemd-resolved.yml"
+  when: ansible_facts['system'] == 'Linux'
 
-- include_tasks: "tasks/install-{{ ansible_facts['os_family'] }}-java.yml"
+- name: Include packages tasks
+  ansible.builtin.include_tasks: "tasks/packages.yml"
+  when: ansible_facts['system'] == 'Linux'
+
+- name: Include Linux Java installation tasks
+  ansible.builtin.include_tasks: "tasks/install-Linux-java.yml"
+  when: ansible_facts['system'] == 'Linux'
+
+- name: Include Windows Java installation tasks
+  ansible.builtin.include_tasks: "tasks/install-Windows-java.yml"
+  when: ansible_facts['os_family'] == 'Windows'
